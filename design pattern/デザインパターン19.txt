@@ -1,0 +1,144 @@
+デザインパターン19(Proxyパターン)
+・Proxyパターン
+
+
+
+■Proxyという単語は、「代理人」という意味。代理人というのは、仕事を行うべき本人の代わりにとなる人。本人でなくてできるような仕事を任せるために代理人をたてる。代理人はあくまで代理にすぎないため、できることには限界がある。代理人ができる範囲を超えた仕事がやってきたら、代理人は本人のところにやってきて、相談をする必要がある。
+オブジェクト指向では「本人も「代理人」もオブジェクトとなる。忙しくてその仕事ができない本人オブジェクトの代わりに、代理人オブジェクトが(ある程度)仕事をこなしてやることになる。
+
+・
+■Main.java
+public class Main {
+    public static void main(String[] args) {
+        Printable p = new PrinterProxy("Alice");
+        System.out.println("名前は現在" + p.getPrinterName() + "です。");
+        p.setPrinterName("Bob");
+        System.out.println("名前は現在" + p.getPrinterName() + "です。");
+        p.print("Hello, world.");
+    }
+}
+■Printable.java
+public interface Printable {
+    public abstract void setPrinterName(String name);   // 名前の設定
+    public abstract String getPrinterName();            // 名前の取得
+    public abstract void print(String string);          // 文字列表示(プリントアウト)
+}
+■Printer.java
+public class Printer implements Printable {
+    private String name;
+    public Printer() {
+        heavyJob("Printerのインスタンスを生成中");
+    }
+    public Printer(String name) {                   // コンストラクタ
+        this.name = name;
+        heavyJob("Printerのインスタンス(" + name + ")を生成中");
+    }
+    public void setPrinterName(String name) {       // 名前の設定
+        this.name = name;
+    }
+    public String getPrinterName() {                // 名前の取得
+        return name;
+    }
+    public void print(String string) {              // 名前付きで表示
+        System.out.println("=== " + name + " ===");
+        System.out.println(string);
+    }
+    private void heavyJob(String msg) {             // 重い作業(のつもり)
+        System.out.print(msg);
+        for (int i = 0; i < 5; i++) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+            }
+            System.out.print(".");
+        }
+        System.out.println("完了。");
+    }
+}
+■PrinterProxy.java
+public class PrinterProxy implements Printable {
+    private String name;            // 名前
+    private Printer real;           // 「本人」
+    public PrinterProxy() {
+    }
+    public PrinterProxy(String name) {      // コンストラクタ
+        this.name = name;
+    }
+    public synchronized void setPrinterName(String name) {  // 名前の設定 最初の流れはnullが入っている
+        if (real != null) {
+            real.setPrinterName(name);  // 「本人」にも設定する
+        }
+        this.name = name;
+    }
+    public String getPrinterName() {    // 名前の取得
+        return name;
+    }
+    public void print(String string) {  // 表示
+        realize();
+        real.print(string);
+    }
+    private synchronized void realize() {   // 「本人」を生成
+        if (real == null) {
+            real = new Printer(name);
+        }
+    }
+}
+
+
+
+●実行結果
+名前は現在Aliceです。
+名前は現在Bobです。
+Printerのインスタンス(Bob)を生成中.....完了。
+=== Bob ===
+Hello, world.
+■Printerクラス
+「本人」を表すクラス。heavyJobメソッドは、実行に5秒かかる重い仕事を表現している。
+Printableを実装している。
+■PrinterProxyクラス
+代理人の役割を果たすもの。
+Printableを実装している。real.printで「委譲」。
+setPrinterNameメソッドやgetPrinterNameメソッドを何回読んでも、Printerのインスタンスは作られない。
+Printerのインスタンスが生成されるのは「本人」が必要になったとき。(本人が生成されているかどうかは、PrinterProxyの利用者には全く分からないし、気にする必要もない)
+覚えることとしてPrinterクラスはPrinterProxyの存在を知らないということ。自分がPrinterProxy経由で呼ばれているのか、それとも直接呼ばれているのか、Printerクラスは知らない。
+
+・Proxyパターンの登場人物
+
+
+
+■Subject(主役)の役
+Proxy役とRealSubject役を同一視するためのインターフェイス(API)を定める。Subject役があるおかげで、Client役は、Proxy役とRealSubject役の違いを意識する必要はない。
+Printableインターフェイスがこの役。
+■Proxy(代理人)の役
+Proxy役はClient役からの要求をできるだけ処理をする。もしも、自分だけで処理できなかったら、Proxy役はRealSubject役に仕事をお任せする。Proxy役は本当にRealSubject役が必要になってからRealSubject役を生成する。Proxy役はSubject役で定められているインターフェイス(API)を実装している。PrinterProxyクラスがこの役。
+■RealSubject(実際の主体)役
+「代理人」のProxy役では手に負えなかったときに登場する。Printerクラスがこの役。
+■Client(依頼人)んお役
+Proxyパターンを利用する役。Mainクラスがこの役。
+
+・代理人を使ってスピードアップ
+
+
+
+■Proxyパターンでは、Proxy役が代理人となって、できるだけ処理を肩代わりする。例えば、サンプルプログラムでは、Proxy役を使うことによって、実際にPrintするときまで、重い処理(インスタンス生成)を遅らせることができた。
+[m:459]例えば、初期化に時間がかかる機能がたくさん存在するような大きなシステムを考える。起動の時点では利用しない機能まで全部初期化してしまったら、アプリケーションの起動に時間がかかってしまうことになる。これではユーザーは不満を感じてしまう。実際にその機能を使う段階になってはじめて初期化した方が、ユーザーに与えるストレスは少なくなる。
+
+・PrinterProxyクラスの実装を変えれば、Printerbleインターフェイスで宣言されているメソッドのうち、
+
+
+
+■何を代理人が処理し、何を本人が処理するのかを変更することができる。しかもそのような変更をいくら加えても、Printerクラスの方を修正する必要まったくない。
+
+・HTTPプロキシ
+
+
+
+■WebサーバーとWebブラウザの間に入って、Webページのキャッシングなどを行うソフトウエア。
+WebブラウザがあるWebページを表示する時、いちいち遠隔地にあるWebサーバにアクセスして、そのページを取得するのではなく、HTTPプロキシがキャッシュしてあるページを代わりに取得する。最新情報が必要になったときやページの有効期限が切れた時に初めて、webサーバーにwebページを取りに行く。
+⇒ここでは、WebブラウザがClient役、HTTPプロキシがProxy役、そしてwebサーバーがRealSubject(実際の主体)役。
+
+・PrinterProxyクラスでは、setPrinterNameメソッドとrealizeメソッドがsynchronizedになっているsynchronizedにしなかった場合に起こる不具合を例示
+
+
+
+■synchronizedにしなかった場合、複数スレッドからsetPrinterNameメソッドとrealizeメソッドが個別に呼ばれると、PrinterProxyクラスのnameとPrinterクラスのnameにずれが生じする場合がある。

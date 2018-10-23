@@ -1,0 +1,327 @@
+デザインパターン10(visitorパターン)
+・visitorパターン
+
+
+
+■「訪問者」という意味。データ構造の中にたくさんの要素が格納されており、その各要素に対して何かの「処理」をしていくとする。このとき、その「処理のコード」どこに書くべきか。普通に考えれば、データ構造を表しているクラスの中に書くと考えるが「処理」が一種類とは限らなかったらどうだろう。その場合、新しい処理が必要になるたびに、データ構造のクラスを修正しなければならなくなる。
+[m:459]visitorパターンでは、データ構造と処理を分離する。そして、データ構造の中をめぐり歩く主体である「訪問者」を表すクラスを用意し、そのクラスに処理を任せる。すると、新しい処理を追加したいときには新しい「訪問者」を作ればよいことになる。そして、データ構造の方は、戸を叩いてく「訪問者」を受け入れてあげればよい。
+
+・compositeパターンで登場したファイルとディレクトリで構成されたデータ構造の中を訪問者がわたり歩き、ファイルの一覧を表示するプログラムを作成
+●Visitor
+public abstract class Visitor {
+    public abstract void visit(File file);
+    public abstract void visit(Directory directory);
+}
+●Element
+public interface Element {
+    public abstract void accept(Visitor v);
+}
+●Entry
+public abstract class Entry implements Element {
+    public abstract String getName();                                   // 名前を得る
+    public abstract int getSize();                                      // サイズを得る
+    public Entry add(Entry entry) throws FileTreatmentException {       // エントリを追加する
+        throw new FileTreatmentException();
+    }
+    public Iterator iterator() throws FileTreatmentException {    // Iteratorの生成
+        throw new FileTreatmentException();
+    }
+    public String toString() {                                          // 文字列表現
+        return getName() + " (" + getSize() + ")";
+    }
+}
+●Directory
+public class Directory extends Entry {
+    private String name;                    // ディレクトリの名前
+    private ArrayList dir = new ArrayList();      // ディレクトリエントリの集合
+    public Directory(String name) {         // コンストラクタ
+        this.name = name;
+    }
+    public String getName() {               // 名前を得る
+        return name;
+    }
+    public int getSize() {                  // サイズを得る
+        int size = 0;
+        Iterator it = dir.iterator();
+        while (it.hasNext()) {
+            Entry entry = (Entry)it.next();
+            size += entry.getSize();
+        }
+        return size;
+    }
+    public Entry add(Entry entry) {         // エントリの追加
+        dir.add(entry);
+        return this;
+    }
+    public Iterator iterator() {      // Iteratorの生成
+        return dir.iterator();
+    }
+    public void accept(Visitor v) {         // 訪問者の受け入れ
+        v.visit(this);
+    }
+}
+●Fileクラス
+public class File extends Entry {
+    private String name;
+    private int size;
+    public File(String name, int size) {
+        this.name = name;
+        this.size = size;
+    }
+    public String getName() {
+        return name;
+    }
+    public int getSize() {
+        return size;
+    }
+    public void accept(Visitor v) {
+        v.visit(this);
+    }
+}
+●FileTreatmentException
+public class FileTreatmentException extends RuntimeException {
+    public FileTreatmentException() {
+    }
+    public FileTreatmentException(String msg) {
+        super(msg);
+    }
+}
+●ListVisitor
+public class ListVisitor extends Visitor {
+    private String currentdir = "";                         // 現在注目しているディレクトリ名
+    public void visit(File file) {                  // ファイルを訪問したときに呼ばれる
+        System.out.println(currentdir + "/" + file);
+    }
+    public void visit(Directory directory) {   // ディレクトリを訪問したときに呼ばれる
+        System.out.println(currentdir + "/" + directory);
+        String savedir = currentdir;
+        currentdir = currentdir + "/" + directory.getName();
+        Iterator it = directory.iterator();
+        while (it.hasNext()) {
+            Entry entry = (Entry)it.next();
+            entry.accept(this);
+        }
+        currentdir = savedir;
+    }
+}
+●Main
+public class Main {
+    public static void main(String[] args) {
+        try {
+            System.out.println("Making root entries...");
+            Directory rootdir = new Directory("root");
+            Directory bindir = new Directory("bin");
+            Directory tmpdir = new Directory("tmp");
+            Directory usrdir = new Directory("usr");
+            rootdir.add(bindir);
+            rootdir.add(tmpdir);
+            rootdir.add(usrdir);
+            bindir.add(new File("vi", 10000));
+            bindir.add(new File("latex", 20000));
+            rootdir.accept(new ListVisitor());
+
+            System.out.println("");
+            System.out.println("Making user entries...");
+            Directory yuki = new Directory("yuki");
+            Directory hanako = new Directory("hanako");
+            Directory tomura = new Directory("tomura");
+            usrdir.add(yuki);
+            usrdir.add(hanako);
+            usrdir.add(tomura);
+            yuki.add(new File("diary.html", 100));
+            yuki.add(new File("Composite.java", 200));
+            hanako.add(new File("memo.tex", 300));
+            tomura.add(new File("game.doc", 400));
+            tomura.add(new File("junk.mail", 500));
+            rootdir.accept(new ListVisitor());
+        } catch (FileTreatmentException e) {
+            e.printStackTrace();
+        }
+    }
+}
+実行結果
+Making root entries...
+/root (30000)
+/root/bin (30000)
+/root/bin/vi (10000)
+/root/bin/latex (20000)
+/root/tmp (0)
+/root/usr (0)
+
+Making user entries...
+/root (31500)
+/root/bin (30000)
+/root/bin/vi (10000)
+/root/bin/latex (20000)
+/root/tmp (0)
+/root/usr (1500)
+/root/usr/yuki (300)
+/root/usr/yuki/diary.html (100)
+/root/usr/yuki/Composite.java (200)
+/root/usr/hanako (300)
+/root/usr/hanako/memo.tex (300)
+/root/usr/tomura (900)
+/root/usr/tomura/game.doc (400)
+/root/usr/tomura/junk.mail (500)
+
+
+
+
+
+■visitorクラス
+「訪問者」を表すクラス
+visitorパターンはクラス間の相互呼び出しが複雑なので、visitorクラスだけを見つめていても理解は進まない。
+■elementインターフェイス
+「訪問者」を受け入れるインターフェイス。visitorクラスがマリアだとすれば、elementインターフェイスは宿屋に相当する。
+■Entryクラス
+elementインターフェイスで宣言されている抽象メソッドaccceptを実際に実装するのは、EntryクラスのサブクラスであるFILEクラスやディレクトリクラスの側である。
+addメソッドはdirectoryクラスだけで有効なので、Entryクラスではエラーにする。要素を取得するためのIteratorが得られるiteratorメソッドもDirectoryクラスだけで有効なので
+、addメソッド同様、Entryクラスでエラーにする。
+■ListVisitorクラス
+visit(File file)メソッドは「Fileクラスのインスタンスに対して行うべき処理」を記述する場所。
+accessメソッドはvisitメソッドを呼び、visitメソッドはaccessメソッドを呼んでいる。visitorパターンではvisitメソッドはaccessメソッドが互いに相手を呼び出している。
+※出力結果の数字については
+ファイルクラスのフィールドである「int size」が影響しているみたい。
+
+・ポイント
+
+
+
+・DirectoryのインスタンスやFileのインスタンスに対しては、acceptメソッドが呼び出されている。
+・acceptメソッドは、インスタンスごとに1回しか呼ばれない
+・ListVisitorのインスタンスに対しては、visit(Directory)やvisit(File)メソッドが呼び出されている。
+・visit(Directory)やvisit(File)を処理しているのは、１つのListVisitorのインスタンスである。
+※ListVisitorのところにvisitによる「処理」が集中しているのが分かる。
+
+・Visitorパターン
+登場人物
+
+
+
+■Visitor(訪問者)の役
+Visitor役は、データ構造の具体的な要素(ConcreteElement役)ごとに「xxxxを訪問した」というvisit(xxxx)メソッドを宣言します。visit(xxxx)はxxxxを処理するためのメソッドで、実際のコードはConcreteVisitor役の側に書かれる。サンプルプログラムでは、Visitorクラスがこの役。
+■ConcreteVisitor(具体的な訪問者)の役
+ConcreteVisitor役は、Visitor役にインターフェイス(API)を実装する。visit(xxxx)という形のメソッドを実装し、個々のConcreteElement役ごとの処理を記述する。サンプルプログラムでは、ListVisitor。ListVisitorでcurrentdirフィールドの値が変化したように、visit(xxxx)を処理していく中で、ConcreteVisitor役の内部状態が変化することもある。
+■Element(要素)の役
+Element役はVisitor役の訪問先を表す役。訪問者を受け入れるacceptメソッドを宣言する。acceptメソッドの引数にはVisitor役が渡される。サンプルプログラムでは、Elementインターフェイス。
+■ConcreteElement(具体的要素)の役
+ConcreteElement役はElement役のインターフェイス(API)を実装する役。サンプルプログラムでは、FileクラスやDirectoryクラスがこの役。
+■ObjectStructure(オブジェクトの構造)の役
+ObjectStructure役は、Element要素の集合を扱う役。ConcreteVisitor役が個々のElement役を扱えるようなメソッドを備えている。サンプルプログラムでは、Directoryクラス。(一人二役)。ConcreteVisitor役が個々のElement役を扱えるように、サンプルプログラムでは、Directoryクラスにはiteratorメソッドが用意されている。
+
+・ダブルディスパッチ
+
+
+
+■accept(受け入れ)メソッドは以下のような呼び出しになる
+element.accept(visitor)
+一方、visit(訪問)メソッドは次のような呼び出しになる。
+visitor.visit(elemnt)
+この2つを見比べると、ちょうど反対の関係にある。elementはvisitorをacceptし、visitorはelementはvisitしている。
+⇒
+Visitorパターンでは、ConcreteElementの役とConcreteVisitorの役の組によって実際の処理が決定する。これを一般にダブルディスパッチ（double dispatch：二重の振り分け）と呼ぶ。
+
+・Visitorパターンの目的
+
+
+
+■処理をデータ構造から分離すること。データ構造は、要素を集合としてまとめたり、要素間をつないだりしてくれる大事なもの。しかし、その構造を保持しておくことと、その構造を基礎とした処理を書くことは別のもの。
+一般にConcreteVisitorの役は、FileクラスやDirectoryクラスとは独立して開発することができる。つまり、Visitorパターンは、FileクラスやDirectoryクラスの部品としての独立性を高めていることになる。もし、処理の内容をFileクラスやDirectoryクラスのメソッドとしてプログラムしてしまうと、新しい「処理」を追加して機能拡張したくなるたびに、FileクラスやDirectoryクラスを修正しなければならない。
+■Visitorパターンでは、DATA構造の要素に対する処理を切り出してVisitor役にまかせる。このようにしてDATA構造とその要素に対する処理が分離できる。
+
+・Open-Closed Principle(OCP)
+
+
+
+「モジュールは拡張に対して開いて (Open) おり，修正に対して閉じて (Closed) いなければならない」
+拡張は大歓迎。でも既存のクラスを修正してはダメ。既存のクラスを修正せずに拡張できるようにせよ。これが原則。
+クラスに対する要求は頻繁に変化する。そしてその要求は、たいていは「機能を拡張してほしい」というもの。そんなときに、クラスが機能拡張に耐えられないようになっていては困る。しかし、その一方で、すでに作り上げ、テストまで済んでいるクラスに修正を加えては、ソフトウエアの品質を下げてしまう危険がある。拡張に対して開いて (Open) おり，修正に対して閉じられているクラスは、部品としての再利用性が高いクラス。そして、デザインパターンの目的、オブジェクト指向の目的は、まさにそのようなクラスを作る仕組みを提供すること。
+http://objectclub.jp/community/memorial/homepage3.nifty.com/masarl/article/dp-ocp-2.html
+
+・ConcreteVisitor役に追加は簡単
+新しいConcreteVisitor役を追加するのは簡単。具体的な処理はConcreteVisitorの役にまかせてしまうことができ、その処理のためConcreteElement役を修正する必要はまったくない。
+
+・ConcreteElement役の追加は困難
+例えば、サンプルプログラムで、EntryクラスのサブクラスとしてDeviceクラスを追加したいとする。つまるDeviceクラスはFileクラスとDirectoryクラスの兄弟にあたる。そのとき、visitorクラスにはvisit(Device)メソッドを作る必要が生じる。そして、Visitorクラスのサブクラス全部に新たにvisit(Device)メソッドを実装しなければならなくなる。
+
+・サンプルプログラムに追加するクラスとして、FileFindVisitorクラスを作る
+拡張子が.htmlファイルの集める。
+
+
+
+■Mainクラス
+public class Main {
+    public static void main(String[] args) {
+        try {
+            Directory rootdir = new Directory("root");
+            Directory bindir = new Directory("bin");
+            Directory tmpdir = new Directory("tmp");
+            Directory usrdir = new Directory("usr");
+            rootdir.add(bindir);
+            rootdir.add(tmpdir);
+            rootdir.add(usrdir);
+            bindir.add(new File("vi", 10000));
+            bindir.add(new File("latex", 20000));
+
+            Directory yuki = new Directory("yuki");
+            Directory hanako = new Directory("hanako");
+            Directory tomura = new Directory("tomura");
+            usrdir.add(yuki);
+            usrdir.add(hanako);
+            usrdir.add(tomura);
+            yuki.add(new File("diary.html", 100));
+            yuki.add(new File("Composite.java", 200));
+            hanako.add(new File("memo.tex", 300));
+            hanako.add(new File("index.html", 350));
+            tomura.add(new File("game.doc", 400));
+            tomura.add(new File("junk.mail", 500));
+
+            FileFindVisitor ffv = new FileFindVisitor(".html");     
+            rootdir.accept(ffv);                                    
+
+            System.out.println("HTML files are:");
+            Iterator it = ffv.getFoundFiles();                      
+            while (it.hasNext()) {                                  
+                File file = (File)it.next();                        
+                System.out.println(file.toString());
+            }                                                       
+        } catch (FileTreatmentException e) {
+            e.printStackTrace();
+        }
+    }
+}
+■FileFindVisitorクラス
+public class FileFindVisitor extends Visitor {
+    private String filetype;
+    private ArrayList found = new ArrayList();
+    public FileFindVisitor(String filetype) {           // ".txt"のように拡張子を.付きで指定
+        this.filetype = filetype;
+    }
+    public Iterator getFoundFiles() {                   // 見つかったファイルを得る
+        return found.iterator();
+    }
+    public void visit(File file) {                  // ファイルを訪問したときに呼ばれる
+        if (file.getName().endsWith(filetype)) {
+            found.add(file);
+        }
+    }
+    public void visit(Directory directory) {   // ディレクトリを訪問したときに呼ばれる
+        Iterator it = directory.iterator();
+        while (it.hasNext()) {
+            Entry entry = (Entry)it.next();
+            entry.accept(this);
+        }
+    }
+}
+
+・final宣言されているクラスは、サブクラスを作ることができない。例えば、java.lang.Stringクラスはfinalクラスとして宣言されているので次のようなMyStringクラスを定義することはできない。
+×コンパイルエラーになる。
+class MyString extends String {
+・・・
+}
+このように、Stringクラスは拡張に関してOpen-Closed Principle(OCP)を破っているが、破るに値する正当な理由がある
+
+
+
+効率。
+Stringクラスが「拡張されない」という前提で、処理スピードに関する最適化や、メモリ量に関する最適化を行っているため。

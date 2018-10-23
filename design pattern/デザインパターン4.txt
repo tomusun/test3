@@ -1,0 +1,351 @@
+デザインパターン4
+・Factory Methodパターン
+
+
+
+■factoryは工場。インスタンスを生成する工場をTemplate Methodパターンで構成したものが、Factory Methodパターン。
+[m:459]Factory Methodパターンでは、インスタンスの作り方をスーパークラスの側で定めるが具体的なクラス名までは定めない。具体的な肉付けは、すべてサブクラスの側で行う。これによって、インスタンス生成のための枠組み(フレームワーク)と、実際のインスタンス生成とを分けて考えることができるようになる。
+
+・公開するパッケージを開発する場合には、
+
+
+
+■ドメイン名を逆にした文字列を使って、世界に一つしかないパッケージ名にすることが推奨されている。例えば、hyuki.comというドメイン名を元にして、com.hyukiで始まるパッケージを作る
+
+・
+■Factoryクラス
+package framework;
+
+public abstract class Factory {
+//Template Methodパターンが使われている。
+    public final Product create(String owner) {
+        Product p = createProduct(owner);
+        registerProduct(p);
+        return p;
+    }
+    protected abstract Product createProduct(String owner);
+    protected abstract void registerProduct(Product product);
+}
+[m:459]工場とは「createメソッドでProductのインスタンスを生成するもの」と規定している。そして、createメソッドは「createProductで製品を作って、registerProductで登録する」という手順で実装されている。
+■Productクラス
+package framework;
+
+public abstract class Product {
+    public abstract void use();
+}
+[m:459]製品とは「何はともあれ、useできるもの」と規定している
+■IDCardクラス
+package idcard;
+import framework.*;
+
+public class IDCard extends Product {
+    private String owner;
+    IDCard(String owner) {
+        System.out.println(owner + "のカードを作ります。");
+        this.owner = owner;
+    }
+    public void use() {
+        System.out.println(owner + "のカードを使います。");
+    }
+    public String getOwner() {
+        return owner;
+    }
+}
+■IDCardFactoryクラス
+package idcard;
+import framework.*;
+import java.util.*;
+
+public class IDCardFactory extends Factory {
+    private List owners = new ArrayList();
+    protected Product createProduct(String owner) {
+        return new IDCard(owner);
+    }
+    protected void registerProduct(Product product) {
+        owners.add(((IDCard)product).getOwner());
+    }
+    public List getOwners() {
+        return owners;
+    }
+}
+■Mainクラス
+import framework.*;
+import idcard.*;
+
+public class Main {
+    public static void main(String[] args) {
+        Factory factory = new IDCardFactory();
+        Product card1 = factory.create("結城浩");
+        Product card2 = factory.create("とむら");
+        Product card3 = factory.create("佐藤花子");
+        card1.use();
+        card2.use();
+        card3.use();
+    }
+}
+実行結果
+結城浩のカードを作ります。
+とむらのカードを作ります。
+佐藤花子のカードを作ります。
+結城浩のカードを使います。
+とむらのカードを使います。
+佐藤花子のカードを使います。
+[m:459]
+
+
+
+■ProductクラスとFactoryクラスがインスタンス生成のためのフレームワークの役割を果たしている。
+■freameworkパッケージの中身を修正せずに、まったく別の「製品」と「工場」が作れることに注目。freameworkパッケージの中ではidcardパッケージをimportしていない。ProductクラスやFactoryクラスの中には、IDCardやIDCardFactoryという具体的なクラス名は書かれていない。(freameworkパッケージはidcardパッケージに依存していない)
+
+・IDCard(String owner) {
+publicをつけていないのは
+
+
+
+■IDCardのインスタンスはidcardパッケージ外からnewを使って生成できないことを表している。IDCardのインスタンスを生成するときは、必ず、IDCardFactoryを経由しなければならないことになる。  
+
+・singletonパターン
+
+
+
+■「このクラスのインスタンスはたった1つしか作らないし、作りたくない」時がある。それは、システムの中に1個しか存在しないものをプログラムで表現したいとき。コンピュータそのものを表現したクラス、現在のシステム設定を表現したクラス、ウィンドウシステムを表現したクラスなどが代表的な例。
+もちろん、注意深くプログラミングして、new MyClass()を１回しか実行しないようにすれば、MyClassのインスタンスは作成されない。しかし、「プログラマが注意しているからインスタンスが1個しか生成されない」のではなく、 
+・指定したクラスのインスタンスが絶対に1個しか存在しないことを保証したい
+・インスタンスが1個しか存在しないことをプログラム上で表現したい
+[m:459]singletonパターン
+■インスタンスが1個しか生成されないことを保証するSingletonパターン。
+インスタンスを得るためのstaticメソッドを用意し、うっかりクラスの外からnewされないように、コンストラクタをprivate。
+
+・
+■Singletonクラス
+public class Singleton {
+    private static Singleton singleton = new Singleton();
+    private Singleton() {
+        System.out.println("インスタンスを生成しました。");
+    }
+    public static Singleton getInstance() {
+        return singleton;
+    }
+}
+■Mainクラス
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("Start.");
+        Singleton obj1 = Singleton.getInstance();
+        Singleton obj2 = Singleton.getInstance();
+        if (obj1 == obj2) {
+            System.out.println("obj1とobj2は同じインスタンスです。");
+        } else {
+            System.out.println("obj1とobj2は同じインスタンスではありません。");
+        }
+        System.out.println("End.");
+    }
+}
+実行結果
+Start.
+インスタンスを生成しました。
+obj1とobj2は同じインスタンスです。
+End.
+
+
+
+■Singletonクラスのコンストラクタはprivateになっている。これはSingletonクラス外からコンストラクタを呼び出すことを禁止するため。もし、
+new Singleton()
+という式がこのクラスの外にあったとしてもコンパイルエラーになる。
+■インスタンスが複数存在すると、インスタンスがたちが相互に影響しあって、思いがけないバグを生み出してしまう可能性がある。しかし、インスタンスが1つしかないという保証があれば、その前提条件の下でプログラミングできるようになる。
+
+・下記クラスをSingletonパターンに適用する。
+public class TicketMaker {
+    private int ticket = 1000;
+    public int getNextTicketNumber() {
+        return ticket++;
+    }
+}
+
+
+
+■public class TicketMaker {
+    private int ticket = 1000;
+    private static TicketMaker singleton = new TicketMaker();       
+    private TicketMaker() {                                         
+    }                                                               
+    public static TicketMaker getInstance() {                       
+        return singleton;                                           
+    }                                                               
+    public synchronized int getNextTicketNumber() {                 
+        return ticket++;
+    }
+}
+■Mainクラス
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("Start.");
+        for (int i = 0; i < 10; i++) {
+            System.out.println(i + ":" + TicketMaker.getInstance().getNextTicketNumber());
+        }
+        System.out.println("End.");
+    }
+}
+※複数のスレッドから呼び出されても正しく動くようにするための措置。もし、synchronizedがついていないと、複数のスレッドに対して同じ値を返す危険性がある。
+
+・インスタンスの個数が3個に限定されているクラスTripleを作る。インスタンスには0,1,2という番号がついており、getInstance(int id)でid番のインスタンスが得られるものとする。
+
+
+
+■public class Triple {
+    private static Triple[] triple = new Triple[]{
+        new Triple(0),
+        new Triple(1),
+        new Triple(2),
+    };
+    private int id;
+    private Triple(int id) {
+        System.out.println("The instance " + id + " is created.");
+        this.id = id;
+    }
+    public static Triple getInstance(int id) {
+        return triple[id];
+    }
+    public String toString() {
+        return "[Triple id=" + id + "]";
+    }
+}
+■public class Main {
+    public static void main(String[] args) {
+        System.out.println("Start.");
+        for (int i = 0; i < 9; i++) {
+            Triple triple = Triple.getInstance(i % 3);
+            System.out.println(i + ":" + triple);
+        }
+        System.out.println("End.");
+    }
+}
+実行結果
+Start.
+The instance 0 is created.
+The instance 1 is created.
+The instance 2 is created.
+0:[Triple id=0]
+1:[Triple id=1]
+2:[Triple id=2]
+3:[Triple id=0]
+4:[Triple id=1]
+5:[Triple id=2]
+6:[Triple id=0]
+7:[Triple id=1]
+8:[Triple id=2]
+End.
+
+・public class Singleton {
+    private static Singleton singleton = null;
+    private Singleton() {
+        System.out.println("インスタンスを生成しました。");
+    }
+    public static Singleton getInstance() {
+        if (singleton == null) {
+            singleton = new Singleton();
+        }
+        return singleton;
+    }
+}
+厳密にはSingletonパターンではない。なぜか。
+
+
+
+■複数のスレッドからほぼ同時にSingleton.getInstanceメソッドが呼ばれたときに、複数のインスタンスが生成されてしまう可能性があるため。
+例
+▼public class Main extends Thread {
+    public static void main(String[] args) {
+        System.out.println("Start.");
+        new Main("A").start();
+        new Main("B").start();
+        new Main("C").start();
+        System.out.println("End.");
+    }
+    public void run() {
+        Singleton obj = Singleton.getInstance();
+        System.out.println(getName() + ": obj = " + obj);
+    }
+    public Main(String name) {
+        super(name);
+    }
+}
+▼public class Singleton {
+    private static Singleton singleton = null;
+    private Singleton() {
+    	System.out.println("インスタンスを生成しました。");
+    }
+    public static Singleton getInstance() {
+        if (singleton == null) {
+            singleton = new Singleton();
+        }
+        return singleton;
+    }
+}
+実行結果
+Start.
+End.
+インスタンスを生成しました。
+インスタンスを生成しました。
+A: obj = rensyuu8.Singleton@1ec8f532
+インスタンスを生成しました。
+C: obj = rensyuu8.Singleton@a842999
+B: obj = rensyuu8.Singleton@32e39829
+※上記は実行したときのマシンの状態によって結果が異なる
+各自jつに複数のインスタンスを生成させるには下記
+public class Singleton {
+    private static Singleton singleton = null;
+    private Singleton() {
+        System.out.println("インスタンスを生成しました。");
+        slowdown();
+    }
+    public static Singleton getInstance() {
+        if (singleton == null) {
+            singleton = new Singleton();
+        }
+        return singleton;
+    }
+    private void slowdown() {
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+        }
+    }
+}
+実行結果
+Start.
+End.
+インスタンスを生成しました。
+インスタンスを生成しました。
+インスタンスを生成しました。
+B: obj = rensyuu8.Singleton@a842999
+A: obj = rensyuu8.Singleton@32e39829
+C: obj = rensyuu8.Singleton@4fd85867
+■厳密なシングルトンパターンにしたもの
+public class Singleton {
+    private static Singleton singleton = null;
+    private Singleton() {
+        System.out.println("インスタンスを生成しました。");
+        slowdown();
+    }
+    public static synchronized Singleton getInstance() {
+        if (singleton == null) {
+            singleton = new Singleton();
+        }
+        return singleton;
+    }
+    private void slowdown() {
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+        }
+    }
+}
+※synchronizedを使う
+実行結果
+Start.
+End.
+インスタンスを生成しました。
+B: obj = rensyuu8.Singleton@1ec8f532
+C: obj = rensyuu8.Singleton@1ec8f532
+A: obj = rensyuu8.Singleton@1ec8f532

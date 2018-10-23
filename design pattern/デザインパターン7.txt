@@ -1,0 +1,361 @@
+・Bridgeパターン
+
+
+
+■現実世界の橋が、川のこちら側とあちら側という2つの場所を結びつける役割を果たしているように、Bridgeパターンも2つの場所結びつける役割を果たしている。
+[m:459]Bridgeパターンが橋渡ししている2つの場所は
+「機能のクラス階層」と「実装のクラス階層」。
+「機能のクラス階層」と「実装のクラス階層」を橋渡しする。
+
+・クラス階層の2つの役割
+■新しい「機能」を追加したいときには
+
+
+
+■あるSomethingがあったとする。Somethingに新しい機能を追加したいと思ったとき(具体的には新しいメソッドを追加したいと思ったとき)、私たちはSomethingクラスのサブクラスとして、SomethingGoodクラスを作る。
+Something
+　⇒SomethingGood
+これは機能を追加するために作られた階層。
+・スーパークラスは基本的な機能を持っている。
+・サブクラスで新しい機能を追加する。
+このクラス階層を「機能のクラス階層」と呼ぶ。
+■新しい機能を追加したいと思ったときに、クラス階層の中から自分の目的に近いクラスを探し出し、そのサブクラスを作り、目的の機能を追加した新しいクラスを作る。これが、機能のクラス階層
+※一般的に、クラス階層はあまり深くしすぎない方がよいとされている。
+
+・■新しい「実装」を追加したいときには
+
+
+
+■例えば、スーパークラスのAbstractClassの抽象メソッドを実装したサブクラスをConcreteClassとすると、次のような小さなクラス階層が作られる。
+AbstractClass
+　⇒ConcreteClass
+ここで使われているクラス階層は、機能を追加するために使われているわけではない。新しいメソッドを増やすためにクラス階層を作っているのではない。
+ここでは、次のような役割分担のためにクラス階層が使われている。
+・スーパークラスは抽象メソッドによってインターフェイス(API)を規定している
+・サブクラスは具象メソッドによってそのインターフェイス(API)を実装する
+このクラス階層を
+「実装のクラス階層」と呼ぶ。
+AbstractClassの別の実装を作ろうとする。その時のサブクラスをAnotherConcreteClassとすると、実装のクラス階層はまた少し変化する。
+AbstractClass
+　⇒ConcreteClass
+　⇒AnotherConcreteClass
+新しい実装を作るためには、AbstractClassのサブクラスを作って、抽象メソッドを実装することになる。これが、実装のクラス階層。
+
+・私たちが「サブクラスを作ろう」と思うとき、自分の意図を次のように確認する必要がある。
+
+
+
+■「私は、機能を追加しているのかな、それとも実装を行おうとしているのかな」クラス階層が1つだと、機能のクラス階層と実装のクラス階層とが1つの階層構造の中に混在することになる。これはクラス階層を複雑にし、見通しを悪くしてしまう恐れがある。自分がサブクラスを作るときに、クラス階層のどこに作っていいか迷ってしまうことになるから。
+そこで、「機能のクラス階層」、「実装のクラス階層」を2つの独立したクラス階層に分けるその2つのクラス階層の間に橋渡しをすることが必要。Bridgeパターンは、このような橋渡しを行うデザインパターン
+
+●Display
+public class Display {
+    private DisplayImpl impl;
+    public Display(DisplayImpl impl) {
+        this.impl = impl;
+    }
+    public void open() {
+        impl.rawOpen();
+    }
+    public void print() {
+        impl.rawPrint();
+    }
+    public void close() {
+        impl.rawClose();
+    }
+    public final void display() {
+        open();
+        print();                    
+        close();
+    }
+}
+●CountDisplay
+public class CountDisplay extends Display {
+    public CountDisplay(DisplayImpl impl) {
+        super(impl);
+    }
+    public void multiDisplay(int times) {       // times回繰り返して表示する
+        open();
+        for (int i = 0; i < times; i++) {
+            print();
+        }
+        close();
+    }
+}
+●DisplayImpl
+public abstract class DisplayImpl {
+    public abstract void rawOpen();
+    public abstract void rawPrint();
+    public abstract void rawClose();
+}
+●StringDisplayImpl
+public class StringDisplayImpl extends DisplayImpl {
+    private String string;  // 表示するべき文字列
+    private int width;  // バイト単位で計算した文字列の「幅」
+    public StringDisplayImpl(String string) {//コンストラクタで渡された文字列stringを、
+        this.string = string; //フィールドに記憶しておく。
+        this.width = string.getBytes().length; //それからバイト単位の幅もフィールドに記憶しておいて、後で使う。
+    }
+    public void rawOpen() {
+        printLine();
+    }
+    public void rawPrint() {
+        System.out.println("|" + string + "|");  // 前後に"|"をつけて表示
+    }
+    public void rawClose() {
+        printLine();
+    }
+    private void printLine() {
+        System.out.print("+"); // 枠の角を表現する"+"マークを表示する。
+        for (int i = 0; i < width; i++) {  // width個の"-"を表示して、
+            System.out.print("-"); // 枠線として用いる。
+        }
+        System.out.println("+"); // 枠の角を表現する"+"マークを表示する。
+    }
+}
+●Main
+public class Main {
+    public static void main(String[] args) {
+        Display d1 = new Display(new StringDisplayImpl("Hello, Japan."));
+        Display d2 = new CountDisplay(new StringDisplayImpl("Hello, World."));
+        CountDisplay d3 = new CountDisplay(new StringDisplayImpl("Hello, Universe."));
+        d1.display();
+        d2.display();
+        d3.display();
+        d3.multiDisplay(5);
+    }
+}
+実行結果
++-------------+
+|Hello, Japan.|
++-------------+
++-------------+
+|Hello, World.|
++-------------+
++----------------+
+|Hello, Universe.|
++----------------+
++----------------+
+|Hello, Universe.|
+|Hello, Universe.|
+|Hello, Universe.|
+|Hello, Universe.|
+|Hello, Universe.|
++----------------+
+
+
+
+
+■機能のクラス階層：Displayクラス
+抽象的な「何かを表示するもの」。このクラスは「機能のクラス階層」の最上位にあるクラス。
+Implフィールドは、このDisplayクラスの「実装」を表すインスタンス。コンストラクタには、実装を表すクラスのインスタンスを表す。引数で渡されたインスタンスは、Implフィールドに保持され、今後の処理で使われる。(このフィールドが2つのクラス階層の「橋」になる。)
+open、print、closeの3つのメソッドは、このDisplayクラスが提供しているインターフェイスで、表示を行う手順を表現している。このメソッドを実現するために、Implフィールドの実装のメソッドを用いている。
+■機能のクラス階層：CountDisplayクラス
+Displayクラスに機能を追加したものがCountDisplayクラス。Displayクラスには「表示する」という機能しかないが、CountDisplayクラスでは「指定回数だけ表示する」という機能を追加している。
+■実装のクラス階層：DisplayImpl
+「実装のクラス階層」の最上位に位置するもの。
+DisplayクラスのOpen、Print、Closeにそれぞれ対応していて、前処理、表示、後処理を行うものになっている。
+■実装のクラス階層：StringDisplayImpl
+文字列を表示するクラス
+
+・Bridgeパターンの登場人物
+
+
+
+■Abstraction(抽象化)の役
+「機能のクラス階層」の最上位。Implement役のメソッドを使って基本的な機能だけが記述されているクラス。このインスタンスはImplement役を保持する。
+Displayクラスがこの役
+■RefinedAbstraction(改善した抽象化)の役
+Abstraction役に対して機能を追加した役。CountDisplayクラスがこの役。
+■Implementor役
+「実装のクラス階層」の最上位に位置するもの。Abstraction(抽象化)の役のインターフェイスを実装するためのメソッドを規定する役。DisplayImplクラスがこの役。
+■ConcreteImplementor(具体的な実装者)の役
+具体的にImplementor役のインターフェイスを実装する役。StringDisplayImplクラスがこの役。
+
+・Bridgeパターンの特徴
+
+
+
+分けておけば拡張するのが楽になる。クラスの拡張を見通しよく行うことができる。
+Bridgeパターンの特徴は「機能のクラス階層」と「実装のクラス階層」を分けている点にある。この2つのクラス階層を分けておけば、それぞれのクラス階層を独立に拡張することができる
+機能を追加したければ、機能クラス階層にクラスを追加する。この時、実装のクラス階層はまったく修正する必要はない。しかも、今追加した機能は「すべての実装」で利用できることになる。
+
+・継承　委譲
+
+
+
+■「継承」クラスは拡張するために便利な方法であるが、クラス間の結びつきががっちり固定してしまう。
+ソースコード上で
+class SomethingGood extends Something
+と書いたら、その関係は、ソースコードを書き替えない限り変えることはできない。(固い結びつき)プログラムの必要に応じてカチカチとクラス間の関係を切り替えたいときには、継承を使うのは不適切。切り替えるたびにソースコードを変更するにはやってられないのでこのようなときは継承ではなく「委譲」を使う。
+サンプルプログラムでは、Displayクラスの中で委譲が行われている。
+「仕事をやれと」言われたら「implくんにおまかせ」している。これが委譲。
+継承は固い結びつきだが委譲ははゆるやかな結びつき。(クラス設計の時に意識)
+■StringDisplayImplクラス以外のConcreteImplementor役があったとしても、そのインスタンスをDisplayやCountDisplayに渡したならそれで実装がかちりと切り替わったことになる。この切替を行うときに修正したのはMainクラスだけで、DisplayやDisplayImplなどのソースコードはいじる必要がない。
+
+・サンプルプログラムにクラスを追加して「ランダム回数表示する」という処理を実現する
+
+
+
+■Mainクラス
+public class Main {
+    public static void main(String[] args) {
+        RandomCountDisplay d = new RandomCountDisplay(new StringDisplayImpl("Hello, Japan."));
+        d.randomDisplay(10);
+    }
+}
+■RandomCountDisplayクラス(※Displayのサブクラスとして作っても構わない。)
+import java.util.Random;
+
+public class RandomCountDisplay extends CountDisplay {
+    private Random random = new Random();
+    public RandomCountDisplay(DisplayImpl impl) {
+        super(impl);
+    }
+    public void randomDisplay(int times) {
+        multiDisplay(random.nextInt(times));
+    }
+}
+
+・乱数に関するクラスの種類
+
+
+
+■Javaプログラミングにおいて、乱数を生成する時に使用する代表的なクラスは以下の通りだ。
+クラス　内容
+java.util.Random　乱数を生成する
+java.lang.Math　基本的な数値処理を実行する 
+■nextInt(int value)
+0～value-1までの範囲内のint型の乱数を取得する。
+乱数の生成する範囲の指定もできる。
+⇒public static void main(String[] args) {
+		//Randomクラスの生成（シード指定なし）
+        Random rnd = new Random();				//[1]
+
+        //乱数を取得する
+        int iValue = rnd.nextInt();				//[2]
+        int iValue2 = rnd.nextInt();			//[3]
+        int iValue3 = rnd.nextInt(100);			//[4]
+        System.out.println("[2]int型： " + iValue);
+        System.out.println("[3]int型(2回目)： " + iValue2);
+        System.out.println("[4]int型(0-99)： " + iValue3);
+実行結果
+[2]int型： 541404124
+[3]int型(2回目)： 1606051297
+[4]int型(0-99)： 50
+※nextInt()
+戻り値の型
+int
+内容
+int型が取り得る範囲でのint型乱数を取得する。
+■下記のようにMathクラスを使って出力を試してみよう。
+Math.random();
+上記を実行すると、0.0～1.0未満の範囲でdouble型の乱数を取得できる。
+1未満の数字がランダムで出るので、例えば10倍したら「0～9」の数字が出るようになる。同じ理屈で、5個のランダム数字を作りたければ5倍にすればいいし、サイコロを作りたければ6倍すればいい。
+
+・サンプルプログラムにクラスを追加して「テキストファイルの内容を表示する」という処理を実現する
+
+
+
+「実装のクラス階層」への追加
+■Mainクラス
+ public static void main(String[] args) {
+        CountDisplay d = new CountDisplay(new FileDisplayImpl("C:\\Users\\tomusun\\Desktop\\star.txt"));
+        d.multiDisplay(3);
+    }
+■FileDisplayImplクラス
+public class FileDisplayImpl extends DisplayImpl {
+    private String filename;
+    private BufferedReader reader;
+    private final int MAX_READAHEAD_LIMIT = 4096;   // 繰り返し表示させられる上限（バッファサイズ）
+    public FileDisplayImpl(String filename) {
+        this.filename = filename;
+    }
+    public void rawOpen() {
+        try {
+            reader = new BufferedReader(new FileReader(filename));
+            reader.mark(MAX_READAHEAD_LIMIT);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println("=-=-=-=-=-= " + filename + " =-=-=-=-=-="); // 飾り枠
+    }
+    public void rawPrint() {
+        try {
+            String line;
+            reader.reset(); // markした位置まで巻き戻す
+            while ((line = reader.readLine()) != null) {
+                System.out.println("> " + line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    public void rawClose() {
+        System.out.println("=-=-=-=-=-= "); // 飾り枠
+        try {
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+■DisplayImplクラス
+public abstract class DisplayImpl {
+    public abstract void rawOpen();
+    public abstract void rawPrint();
+    public abstract void rawClose();
+}
+■CountDisplayクラス
+public class CountDisplay extends Display {
+    public CountDisplay(DisplayImpl impl) {
+        super(impl);
+    }
+    public void multiDisplay(int times) {       // times回繰り返して表示する
+        open();
+        for (int i = 0; i < times; i++) {
+            print();
+        }
+        close();
+    }
+}
+■Displayクラス
+public class Display {
+    private DisplayImpl impl;
+    public Display(DisplayImpl impl) {
+        this.impl = impl;
+    }
+    public void open() {
+        impl.rawOpen();
+    }
+    public void print() {
+        impl.rawPrint();
+    }
+    public void close() {
+        impl.rawClose();
+    }
+    public final void display() {
+        open();
+        print();
+        close();
+    }
+}
+実行結果
+=-=-=-=-=-= C:\Users\tomusun\Desktop\star.txt =-=-=-=-=-=
+> Twinkle, twinkle, little star,
+> How I wonder what you are.
+> Twinkle, twinkle, little star,
+> How I wonder what you are.
+> Twinkle, twinkle, little star,
+> How I wonder what you are.
+=-=-=-=-=-= 
+※reader.mark(MAX_READAHEAD_LIMIT);がないと
+java.io.IOException: Stream not markedのエラーが出る。
+reset()を使う場合は、markメソッドも使わなければならなそう。
+
+・BufferedInputStreamなら、markとreset
+
+
+
+BufferedInputStreamなら、markとresetを使って、条件付きで後戻りが可能になる。
+http://blog.mwsoft.jp/article/45580251.html

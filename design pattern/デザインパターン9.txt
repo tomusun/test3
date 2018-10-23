@@ -1,0 +1,246 @@
+デザインパターン9(Decorateパターン)
+・Decorateパターン
+
+
+
+■スポンジケーキが1つあったとする。クリームを塗れば、何も載っていないショートケーキが出来上がる。そこにイチゴを並べれば、ストロベリーショートケーキが出来上がる。さらに板チョコをのせて、ホワイトチョコレートで名前を書き、年齢の数だけキャンドルを立てれば、バースデーケーキが出来上がる
+スポンジケーキもショートケーキも、ストロベリーショートケーキも、バースデーケーキも中心にあるのは同じスポンジケーキ。
+⇒オブジェクトもこのようなケーキと似ているところがある。まず中心となるスポンジケーキのようなオブジェクトがある。それに飾りつけとなる機能を一皮一皮かぶせていって、より目的にあったオブジェクトに仕上げていく。このような、オブジェクトにどんどんデコレーション(飾りつけ)をほどこしていくようなデザインパターンをDecorateパターンと呼ぶ。
+⇒Decorate=飾りつけするものという意味
+
+●Displayクラス
+public abstract class Display {
+    public abstract int getColumns();               // 横の文字数を得る
+    public abstract int getRows();                  // 縦の行数を得る
+    public abstract String getRowText(int row);     // row番目の文字列を得る
+    public void show() {                            // 全部表示する
+        for (int i = 0; i < getRows(); i++) {
+            System.out.println(getRowText(i));
+        }
+    }
+}
+●StringDisplayクラス
+public class StringDisplay extends Display {
+    private String string;                          // 表示文字列
+    public StringDisplay(String string) {           // 引数で表示文字列を指定
+        this.string = string;
+    }
+    public int getColumns() {                       // 文字数
+        return string.getBytes().length;
+    }
+    public int getRows() {                          // 行数は1
+        return 1;
+    }
+    public String getRowText(int row) {             // rowが0のときのみ返す
+        if (row == 0) {
+            return string;
+        } else {
+            return null;
+        }
+    }
+}
+●Borderクラス
+public abstract class Border extends Display {
+    protected Display display;          // この飾り枠がくるんでいる「中身」を指す
+    protected Border(Display display) { // インスタンス生成時に「中身」を引数で指定
+        this.display = display;
+    }
+}
+●SideBorderクラス
+public class SideBorder extends Border {
+    private char borderChar;                        // 飾りとなる文字
+    public SideBorder(Display display, char ch) {   // コンストラクタでDisplayと飾り文字を指定
+        super(display);
+        this.borderChar = ch;
+    }
+    public int getColumns() {                       // 文字数は中身の両側に飾り文字分を加えたもの
+        return 1 + display.getColumns() + 1;
+    }
+    public int getRows() {                          // 行数は中身の行数に同じ
+        return display.getRows();
+    }
+    public String getRowText(int row) {             // 指定行の内容は、中身の指定行の両側に飾り文字をつけたもの
+        return borderChar + display.getRowText(row) + borderChar;
+    }
+}
+●FullBorderクラス
+public class FullBorder extends Border {
+    public FullBorder(Display display) {
+        super(display);
+    }
+    public int getColumns() {                   // 文字数は中身の両側に左右の飾り文字分を加えたもの
+        return 1 + display.getColumns() + 1;
+    }
+    public int getRows() {                      // 行数は中身の行数に上下の飾り文字分を加えたもの
+        return 1 + display.getRows() + 1;
+    }
+    public String getRowText(int row) {         // 指定した行の内容
+        if (row == 0) {                                                 // 上端の枠
+            return "+" + makeLine('-', display.getColumns()) + "+";
+        } else if (row == display.getRows() + 1) {                      // 下端の枠
+            return "+" + makeLine('-', display.getColumns()) + "+";
+        } else {                                                        // それ以外
+            return "|" + display.getRowText(row - 1) + "|";
+        }
+    }
+    private String makeLine(char ch, int count) {         // 文字chをcount個連続させた文字列を作る
+        StringBuffer buf = new StringBuffer();
+        for (int i = 0; i < count; i++) {
+            buf.append(ch);
+        }
+        return buf.toString();
+    }
+}
+●Mainクラス
+public class Main {
+    public static void main(String[] args) {
+        Display b1 = new StringDisplay("Hello, world.");
+        Display b2 = new SideBorder(b1, '#');
+        Display b3 = new FullBorder(b2);
+        b1.show();
+        b2.show();
+        b3.show();
+        Display b4 =
+                    new SideBorder(
+                        new FullBorder(
+                            new FullBorder(
+                                new SideBorder(
+                                    new FullBorder(
+                                        new StringDisplay("こんにちは。")
+                                    ),
+                                    '*'
+                                )
+                            )
+                        ),
+                        '/'
+                    );
+        b4.show();
+    }
+}
+実行結果
+Hello, world.
+#Hello, world.#
++---------------+
+|#Hello, world.#|
++---------------+
+/+------------------------+/
+/|+----------------------+|/
+/||*+------------------+*||/
+/||*|こんにちは。|*||/
+/||*+------------------+*||/
+/|+----------------------+|/
+/+------------------------+/
+
+
+
+■StringDisplayクラス
+冒頭のケーキのたとえ話にあてはめると、このStringDisplayクラスはバースデイケーキの中心にあるスポンジケーキになる。
+■Borderクラス
+飾り枠のBorderクラスは、Display型のdisplayフィールドを持っている。これは、この飾り枠がくるんでいる「中身」を指すもの。でも、displayの中身がStringDisplayのインスタンスとは限らない。何しろBorderもdisplayのサブクラスなので、displayフィールドの中身はさらに別の飾り枠(Borderクラスのサブクラスのインスタンス)かもしれない。
+■SideBorderクラス
+文字列の左右に決まった文字列(borderChar)で飾りを付けるもの。例えば、borderCharフィールドの値が'|'だとすると、|中身|のように、「中身」の左右に文字列が付加されて、showで表示されることになる。
+■FullBorderクラス
+上下左右に飾りつけをする。飾りつけの文字は固定。
+■
+b1・・・"Hello, world."を飾りなしで表示するもの。
+b2・・・b1に対して、'#'の文字で左右に飾りつけをしたもの。
+b3・・・b2に対して全体の飾りつけをつけたもの
+b4・・・"こんにちは。"に何重にも飾りつけをつけたもの。
+
+・Decorataパターンの登場人物
+◆Componentの役
+機能を追加する時の核になる役。たとえ話でいうと、デコレーションする前のスポンジケーキにあたる。Component役はスポンジケーキのインターフェイス(API)だけを定めるDisplayクラスがこの役
+◆ConcreteComponentの役
+Component役のインターフェイス(API)を実装している具体的なスポンジケーキ。StringDisplayがこの役。
+◆Decorate(装飾者)の役
+Component役と同じようなインターフェイス(API)を持つ。Decorate役が飾る対象となるComponent役を持っている。この役は、自分が飾っている対象を「知っている」わけ。Borderクラスがこの役。
+◆ConcreteDecorateの役
+具体的なDecorateの役。SideBorderとFullBorderがこの役。
+
+・透過的なインターフェイス
+
+
+
+Decorateパターンでは、飾り枠と中身を同一視している。飾り枠を表すBorderクラスが中身を表すDisplayクラスのサブクラスになっているところで、その同一視が表現されている。つまりBorderクラス(およびそのサブクラスたち)は、中身を表すDisplayクラスと同じインターフェイスを持っている。飾り枠を使って中身を包んでも、インターフェイスは少しも隠れない。getColumns、getRows、getRowText、それにshowというメソッドは隠されることなくほかのクラスから見ることができる。これおを、インターフェイスが「透過的」であるという。インスタンスb4のように、飾枠をたくさん使って包んでもインターフェイスは全く変更されていない。
+
+・中身を変えずに機能追加ができる。
+
+
+
+■Decorateパターンでは、飾枠も中身も共通のインターフェイスを持っている。インターフェイスは共通であるが、包めば包むほど機能が追加されていく。DisplayをSideBorderで包めば、左右に新しい飾り文字をつける表示ができるようになる。さらにFullBorderで包めば、今度は周り全体に飾り枠がつく。その際に包まれる方を修正する必要はない。包まれるものを変更することなく、機能の追加を行うことができる。
+■Decorateパターンでは、委譲が使われている。「飾り枠」に対してやってきた要求(メソッドの呼び出し)は、その「中身」にたらいまわし(委譲)される。SideBorderのgetColumnsメソッドの中でdisplay.getColumns()を呼びだしている。また、getRowsメソッドではdisplay.getRows()を呼び出している。
+■Decorateパターンで使われている委譲は、クラス間をゆるやかに結合している。フレームワークのソースを変更することなく、オブジェクトの関係を変えた新しいオブジェクトを作ることができる。
+
+・単純な品揃えでも、多様な機能追加ができる
+
+
+
+■Decorateパターン使うと、多様な機能追加を行うことができる。具体的な飾り枠(ConcreteDecorate役)をたくさん用意しておけば、それらを自由に組み合わせて新しいオブジェクトを作ることができるから。その際に、個々の飾り枠は単純でも構わない。
+⇒これは、バニラ、チョコ、ストロベリー、キーウィ・・といったフレーバーを自由に選べるアイスクリームのようなもの。お客さんが注文するかもしれない様々なアイスクリームを、初めから用意していたら大変。お店では多種類のフレーバーだけを用意する。そして、お客さんの注文に合わせてフレーバーを組み合わせ、注文通りのアイスクリームを作る。バニラだけが食べたい、コーヒーラムとピスタチオのダブルが食べたい。などお客の注文は様々。Decorateパターンは、そのような要求に応えるのに向いている。
+
+・Decorateパターンが使われているJavaのパッケージ
+
+
+
+java.ioパッケージ。java.ioは入力(Input/Output,略してI/O)を行うためのパッケージ。
+まず、次のようにすると、ファイルからデータを読み込むインスタンスが作れる。
+  Reader reader = new FileReader("datafile.txt");
+また次のようにすると、ファイルからデータおw読み込むときにバッファリングを行うようになる。
+  Reader reader = new BufferedReader(new FileReader("datafile.txt"));
+これは、BufferedReaderクラスのインスタンスを作るときに、実際にデータを読み込む先として、FileReaderクラスのインスタンスを指定することになる。さらに、次のようにすると、行番号を管理することができる。
+  Reader reader = new LineNumberReader(new BufferedReader(new FileReader("datafile.txt")));
+LineNumberReaderのコンストラクタにも、BufferedReaderのコンストラクタにも、Readerクラス(のサブクラス)のインスタンスを渡すことができるので、上のようにいろんな組み合わせを作ることができる。
+■次は行番号は管理するけど、バッファリングは行わない場合。
+  Reader reader = new LineNumberReader(new FileReader("datafile.txt"));
+次は、行番号を管理し、バッファリングを行うけれど、ファイルから読み込むのではなく、ネットワークから読み込むためのもの。
+  java.net.Socket socket = new Socket(hostname, portnumber);
+  ・・・
+  Reader reader = new LineNumberReader(new BufferedReader(new InputStreamReader(socket.getInputStream())));
+
+・Decorateパターン 欠点
+
+
+
+よく似ている小さなクラスがたくさん作られてしまういう欠点がある。 
+
+・
+■class Rose{
+ Violet obj = ...;
+ void method(){
+  obj.method();
+  }
+}
+}
+■class Violet {
+  void method(){
+  　・・・
+  }
+}
+嫌な感じがする。
+
+
+
+RoseとVioletは同じmethodを持っていて、RoseはVioletに委譲しているが嫌な感じがする。
+何がいやかというと、両者は共通のメソッドであるmethodを持っているが「その」「共通の」という情報が、ソース中には明示されていないから。
+次のように共通の中小クラスがFlowerがあると、引き締まる。
+例
+■abstract class Flower{
+  abstract void method();
+}
+■class Rose extends Flower{
+ Violet obj = ...;
+ void method(){
+  obj.method();
+  }
+}
+}
+■class Violet  extends Flower{
+  void method(){
+  　・・・
+  }
+}
+⇒
+あるいはFlowerはインターフェイスかもしれない。
+■interface Flower{
+  abstract void method();
+}

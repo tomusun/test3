@@ -1,0 +1,182 @@
+デザインパターン15(Mementoパターン)
+・Mementoパターン
+
+
+
+メメントパターン
+■テキストエディタを使っているとき、必要なテキストを誤って削除してしまっても、アンドゥ(やり直し)という機能を使えば、削除する前の状態にテキストを復元することできる。アンドゥを何段階も行って、編集作業をどんどん過去にさかのぼれるエディタもある。
+オブジェクト指向のプログラムでアンドゥを行うには、インスタンスの持っている情報を保存しておく必要がある。ただし、保存しておくだけでは駄目で、保存しておいた情報からインスタンスを元の状態に戻さなければならない。
+インスタンスを復元するためには、インスタンス内部の情報に自由にアクセスできる必要がある。しかし、不用意にアクセスを許してしまうとそのクラスの内部構造に依存したコードがあちこちに散らばり、クラスの修正がしにくくなってしまう。これをカプセル化の破壊という。
+インスタンの状態を表す役割を導入して、カプセル化の破壊に陥ることなく保存と復元を行うのがMementoパターン。
+Mementoパターンを利用すると、プログラムに対して
+undo(やり直し)
+redo(再実行)
+history(作業履歴の作成)
+snapshot(現在状態の保存)
+などを行うことができる。
+mementoという英単語は。「思い出の種」という意味。「思い出の写真」が、、引き出しの奥からぽろっと出てきたとする。なつかしい写真を見ると、その頃の記憶がどっとよみがえってきて、まるでその時代に戻ったかのような気分になる。
+Mementoパターンはそのようなデザインパターン。ある時点でのインスタンスの状態をぱちりと記憶しておき、あとでインスタンスをその時の状態に戻してやる。
+
+・サンプルプログラム
+「フルーツを集めていくさいころゲーム」
+プログラムの名kでは、お金が貯まったところで、将来のためにMementoクラスのインスタンスを作って、「現在の状態」を保存する。保存するのは現在持っているお金とフルーツ。もしも負け続けてお金が減ってきたら、お金が無くなって終了しないように、以前保存しておいたMementoのインスタンスを使って以前の状態を復元する。
+
+■Gamerクラス
+package game;
+import java.util.*;
+
+public class Gamer {
+    private int money;                          // 所持金
+    private List fruits = new ArrayList();      // フルーツ
+    private Random random = new Random();       // 乱数発生器
+    private static String[] fruitsname = {      // フルーツ名の表
+        "リンゴ", "ぶどう", "バナナ", "みかん",
+    };
+    public Gamer(int money) {                   // コンストラクタ
+        this.money = money;
+    }
+    public int getMoney() {                     // 現在の所持金を得る
+        return money;
+    }
+    public void bet() {                         // 賭ける…ゲームの進行
+        int dice = random.nextInt(6) + 1;           // サイコロを振る
+        if (dice == 1) {                            // 1の目…所持金が増える
+            money += 100;
+            System.out.println("所持金が増えました。");
+        } else if (dice == 2) {                     // 2の目…所持金が半分になる
+            money /= 2;
+            System.out.println("所持金が半分になりました。");
+        } else if (dice == 6) {                     // 6の目…フルーツをもらう
+            String f = getFruit();
+            System.out.println("フルーツ(" + f + ")をもらいました。");
+            fruits.add(f);
+        } else {                                    // それ以外…何も起きない
+            System.out.println("何も起こりませんでした。");
+        }
+    }
+    public Memento createMemento() {                // スナップショットをとる
+        Memento m = new Memento(money);
+        Iterator it = fruits.iterator();
+        while (it.hasNext()) {
+            String f = (String)it.next();
+            if (f.startsWith("おいしい")) {         // フルーツはおいしいものだけ保存
+                m.addFruit(f);
+            }
+        }
+        return m;
+    }
+    public void restoreMemento(Memento memento) {   // アンドゥを行う
+        this.money = memento.money;
+        this.fruits = memento.getFruits();
+    }
+    public String toString() {                      // 文字列表現
+        return "[money = " + money + ", fruits = " + fruits + "]";
+    }
+    private String getFruit() {                     // フルーツを1個得る
+        String prefix = "";
+        if (random.nextBoolean()) {
+            prefix = "おいしい";
+        }
+        return prefix + fruitsname[random.nextInt(fruitsname.length)];
+    }
+}
+■Mementoクラス
+package game;
+import java.util.*;
+
+public class Memento {
+    int money;                              // 所持金
+    ArrayList fruits;                       // フルーツ
+    public int getMoney() {                 // 所持金を得る(narrow interface)
+        return money;
+    }
+    Memento(int money) {                    // コンストラクタ(wide interface)
+        this.money = money;
+        this.fruits = new ArrayList();
+    }
+    void addFruit(String fruit) {           // フルーツを追加する(wide interface)
+        fruits.add(fruit);
+    }
+    List getFruits() {                    // フルーツを得る(wide interface)
+         return (List)fruits.clone();
+    }
+}
+■Mainクラス
+import game.Memento;
+import game.Gamer;
+
+public class Main {
+    public static void main(String[] args) {
+        Gamer gamer = new Gamer(100);               // 最初の所持金は100
+        Memento memento = gamer.createMemento();    // 最初の状態を保存しておく
+        for (int i = 0; i < 100; i++) {
+            System.out.println("==== " + i);        // 回数表示
+            System.out.println("現状:" + gamer);    // 現在の主人公の状態表示
+
+            gamer.bet();    // ゲームを進める
+
+            System.out.println("所持金は" + gamer.getMoney() + "円になりました。");
+
+            // Mementoの取り扱いの決定
+            if (gamer.getMoney() > memento.getMoney()) {
+                System.out.println("    （だいぶ増えたので、現在の状態を保存しておこう）");
+                memento = gamer.createMemento();
+            } else if (gamer.getMoney() < memento.getMoney() / 2) {
+                System.out.println("    （だいぶ減ったので、以前の状態に復帰しよう）");
+                gamer.restoreMemento(memento);
+            }
+
+            // 時間待ち
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+            }
+            System.out.println("");
+        }
+    }
+}
+
+
+
+
+■Mementoクラス
+主人公(Gamer)の状態を表現するクラス。
+moneyとfruitsフィールドはprivateになっていないがこれには理由がある。このフィールドは、同じパッケージ内のGamerクラスからは自由にアクセスできるようにしたいから。
+Mementoクラスのコンストラクタには、publicがついていない。Mementoクラスのインスタンスは誰でも作れるわけではなく、同じパッケージ(ここではgameパッケージ)に属しているクラスからしか使うことはできない。具体的には、Mementoクラスのインスタンスは、gameパッケージのGamerクラスが生成する。
+addFruitメソッドもpublicになっていない。フルーツを追加できるのは、同じパッケージのクラスだけ。gameパッケージの外からは、Mementoの内部を変更することはできない。
+■Gamerクラス
+ゲームを行う主人公を表現しているクラス。
+createMementoメソッドはぱちりと写真を撮るように、現在の状態をMementoインスタンスに閉じ込めた。
+
+・Mementoパターンの登場人物
+
+
+
+■Originator(作成者)の役
+Originator役は、自分の現在の状態を保存したいときにMemento役を作る。Originator役はまた、以前のMemento役を渡されると、そのMemento役を作った時点での状態に戻る処理を行う。Gamerクラスがこの役
+■Memento(記念品)の役
+Memento役は、Originatorの内部情報をまとめる。Memento役は、Originator役の内部情報を持っているが、その情報を誰にでも公開するわけではない。
+Memento役は、次の2種類のインターフェイス(API)を持っている
+⇒
+wide interface・・・広いインターフェイス(API)
+Memento役が提供する「広いインターフェイス(API)」は、オブジェクトの状態を元に戻すために必要な情報がすべて得られるメソッドの集合。広いインターフェイス(API)はMemento役の内部をさらけだしてしまうため、これを使えるのはOriginator役だけ
+⇒
+narrow interface・・・狭いインターフェイス(API)
+Memento役が提供する「狭いインターフェイス(API)」は、外部のCaretaker役に見せるもの。狭いインターフェイス(API)でできることには限りがあり、内部状態が外部に公開されるのを防ぐ。
+※この2種類のインターフェイス(API)を使い分けることで、オブジェクトのカプセル化を防ぐことができる。
+Mementoクラスがこの役。
+Originator役とMemento役は非常に親密な関係にある。
+■Caretaker役
+現在のOriginator役の状態を保存したいときに、そのことをOriginator役に伝える。Originator役はそれを受けてMemento役を作り、Caretaker役に渡す。Caretaker役は将来の必要に備えて、そのMemento役を保存しておく。mainクラスがこの役。
+Caretaker役は狭いインターフェイス(API)しか使えない。
+
+・Mementoクラスでは、getMoneyメソッドだけにpublicをつけて、狭いインターフェイスにしている。このメソッドは、Caretaker役のMainクラスからも利用できる。publicなのに「狭い」というのは、変な感じがするかもしれないが、ここでいう「狭い」とは、
+
+
+
+■「内部状態を操作できる度合いが少ない」という意味。Mementoクラスが持っているメソッドのうち、publicがついているものはgetMoneyただ１つだけ。つまり、できるのは所持金をを得ることだけ。そのような「できることが少ない」という状態を「狭い」と表現した。
+MainクラスができることはgetMoneyメソッドで所持金を得ることと、Mementoクラスのインスタンスを変数などに保持しておくだけ。
+Mainクラスには、Mementoのコンストラクタも見えないことに注意。
+new Moment(100)
+ができない。
+以上のようにアクセス制御を用いれば、「このクラスにはこのメソッドを見せるけど、あのクラスには見せない」ということをプログラムで表現できる。

@@ -1,0 +1,161 @@
+デザインパターン3(Template Methodパターン、final void display、Template Methodパターンのメリット、抽象クラスの意義、スーパークラスとサブクラスの協調)
+・Template Methodパターン
+
+
+
+ソースコードの洗練を行う際にも有効なテクニックです。
+■テンプレートの機能を持つパターン。スーパークラスの方にテンプレートとなるメソッドが定義されている。そのメソッドの定義の中では抽象メソッドが定義されている。
+スーパークラスで処理の枠組みを定め、サブクラスでその具体的な内容を定めるようなデザインパターンをTemplate Methodパターンと呼ぶ。
+ スーパークラスで処理手順の枠組みを決め, その手順で利用するメソッドを抽象メソッドで定義しておく. そしてその抽象メソッドを, サブクラスで実装し, 具体的な処理内容を定義するという形になる.
+
+・サンプルコード
+
+
+
+■AbstractDisplayクラス
+public abstract class AbstractDisplay { // 抽象クラスAbstractDisplay
+    public abstract void open();        // サブクラスに実装をまかせる抽象メソッド(1) open
+    public abstract void print();       // サブクラスに実装をまかせる抽象メソッド(2) print
+    public abstract void close();       // サブクラスに実装をまかせる抽象メソッド(3) close
+    public final void display() {       // この抽象クラスで実装しているメソッドdisplay
+        open();                             // まずopenして…
+        for (int i = 0; i < 5; i++) {       // 5回printを繰り返して…
+            print();                    
+        }
+        close();                            // …最後にcloseする。これがdisplayメソッドで実装されている内容。
+    }
+}
+■CharDisplayクラス
+public class CharDisplay extends AbstractDisplay {  // CharDisplayは、AbstractDisplayのサブクラス。
+    private char ch;                                // 表示すべき文字。
+    public CharDisplay(char ch) {                   // コンストラクタで渡された文字chを、
+        this.ch = ch;                               // フィールドに記憶しておく。
+    }
+    public void open() {                            // スーパークラスでは抽象メソッドだった。ここでオーバーライドして実装。
+        System.out.print("<<");                     // 開始文字列として"<<"を表示する。
+    }
+    public void print() {                           // printメソッドもここで実装する。これがdisplayから繰り返して呼び出される。
+        System.out.print(ch);                       // フィールドに記憶しておいた文字を1個表示する。
+    }
+    public void close() {                           // closeメソッドもここで実装。
+        System.out.println(">>");                   // 終了文字列">>"を表示。
+    }
+}
+■StringDisplayクラス
+public class StringDisplay extends AbstractDisplay {    // StringDisplayも、AbstractDisplayのサブクラス。
+    private String string;                              // 表示するべき文字列。
+    private int width;                                  // バイト単位で計算した文字列の「幅」。
+    public StringDisplay(String string) {               // コンストラクタで渡された文字列stringを、
+        this.string = string;                           // フィールドに記憶。
+        this.width = string.getBytes().length;          // それからバイト単位の幅もフィールドに記憶しておいて、後で使う。
+    }
+    public void open() {                                // オーバーライドして定義するopenメソッド。
+        printLine();                                    // このクラスのメソッドprintLineで線を引いている。
+    }
+    public void print() {                               // printメソッドは、
+        System.out.println("|" + string + "|");         // フィールドに記憶しておいた文字列の前後に"|"をつけて表示。
+    }
+    public void close() {                               // closeメソッドは、
+        printLine();                                    // openと同じくprintLineメソッドで線を引いている。
+    }
+    private void printLine() {                          // openとcloseから呼ばれるprintLineメソッドだ。privateなので、このクラスの中だけで使われる。
+        System.out.print("+");                          // 枠の角を表現する"+"マークを表示。
+        for (int i = 0; i < width; i++) {               // width個の"-"を表示して、
+            System.out.print("-");                      // 枠線として用いる。
+        }
+        System.out.println("+");                        // 枠の角を表現する"+"マークを表示。
+    }
+}
+■Mainクラス
+public class Main {
+    public static void main(String[] args) {
+        AbstractDisplay d1 = new CharDisplay('H');                  // 'H'を持ったCharDisplayのインスタンスを1個作る。
+        AbstractDisplay d2 = new StringDisplay("Hello, world.");    // "Hello, world."を持ったStringDisplayのインスタンスを1個作る。
+        AbstractDisplay d3 = new StringDisplay("こんにちは。");     // "こんにちは。"を持ったStringDisplayのインスタンスを1個作る。
+        d1.display();                                               // d1,d2,d3とも、すべて同じAbstractDisplayのサブクラスのインスタンスだから、
+        d2.display();                                               // 継承したdisplayメソッドを呼び出すことができる。
+        d3.display();                                               // 実際の動作は個々のクラスCharDisplayやStringDisplayで定まる。
+    }
+}
+実行結果
+<<HHHHH>>
++-------------+
+|Hello, world.|
+|Hello, world.|
+|Hello, world.|
+|Hello, world.|
+|Hello, world.|
++-------------+
++------------------+
+|こんにちは。|
+|こんにちは。|
+|こんにちは。|
+|こんにちは。|
+|こんにちは。|
++------------------+
+※抽象メソッドを使っているdisplayメソッドがテンプレートメソッドになる。
+string.getBytes().length
+13
+18
+
+・final void display
+
+
+
+■サブクラスでオーバーライドできないことを表している。
+[m:459]このクラス作成者は「もしもサブクラスを作るなら、displayメソッドをオーバーライドせずに拡張せよ」と、サブクラスに作成者に対して要請していることになる。
+GoF本にはテンプレートメソッドはオーバーライドすべきではないと書かれている。
+
+・サンプルプログラムでは、open,print,closeを継承関係および同一パッケージににあるクラスからのい呼びだせるようにし、無関係な他のクラスからは呼び出せないようにしたい。
+
+
+
+AbstractDisplayクラスのおいて、open,print,closeメソッドはっをprotected宣言する。すると、これらのメソッドは継承関係にあるサブクラスからは呼びだせるが他のパッケージにあるクラスからは呼びだせなくなる。(ただし、同じパッケージにあるクラスからは呼びだされてしまう。)
+
+・Template Methodパターンでは、AbstractClass (抽象クラス)役にインターフェイスを使うことはできない。
+
+
+
+■Template Methodパターンでは、AbstractClass (抽象クラス)役は処理の骨組みを実装しなければならないから。抽象クラスでは、一部のメソッドを具体的に実装できる。(例：AbstractDisplayクラスのdisplayメソッド)。しかしインターフェイスではすべてのメソッドが抽象メソッドではなければならない。Template Methodパターンは抽象クラスの代わりにインターフェイスを使うことはできない。
+
+・AbstractClass (抽象クラス):
+
+
+
+テンプレートメソッドを実装する. また, テンプレートメソッドで使用するメソッド を抽象メソッドで定義する.
+
+・ConcreteClass (具象クラス):
+
+
+
+[AbstractClass] で定義した抽象メソッドを実装する. ここで実装した抽象メソッド は, [AbstractClass] のテンプレートメソッドで使用される
+
+・Template Methodパターンのメリット
+
+
+
+■プログラミングをしていると、ほとんどの処理は同じだが一部の処理が違うクラスやメソッドをつくることがあります。完全に同じならば、既存のものを利用すれば良いのですが、一部だけ違うとなるとコピペをして一部を書き換えるということをしてしまうと思います。しかし、これだと、コピペしたものの処理にバグがあった場合、コピペして作ったすべてのものを修正する必要があるので、後々の変更に対応出来ません。そんなとき、使えるデザインパターンがTemplate Methodパターンです。
+Template Methodパターンの目的は、親クラスで処理の大まかな処理を決めておいて、具体的な処理の内容をサブクラスに任せることです。一見普通の継承と変わらないのですが、「処理の一部をサブクラスで実装する」ということがポイントです。
+■■Template Methodパターンのメリット
+■共通の処理をまとめることができる
+それぞれのサブクラスの共通な処理を、親クラスにまとめることができます。これにより、サブクラス側に共通な処理の部分を記述する必要がなくなり、変更が必要となった場合でも処理の大まかな処理をしているクラス（抽象クラス）側を修正するだけで済みます。
+サブクラスで具体的な処理内容を変えることができる
+親クラスで定義された抽象メソッドは、サブクラス側で具体的に実装されます。つまり、処理の大きな枠組みを変更することなく、サブクラスによって具体的な処理内容を変えることができるのです。
+[m:459]テンプレートメソッドパターンはいろいろな場面で使うことができると思います。似たような処理、似たような処理の流れが複数のクラスやメソッドで出てきたときは、Template Methodパターンを使えないかどうか検討してみてください。
+ということで、スーパークラスで処理の骨組みを規定して、サブクラスで処理の内容を具体化する、Template Methodパターンについてでした。
+■メリット
+[m:459]冗長なコードを減らせるため、保守性が向上する
+[m:459]類似するクラスを作成したいときに再利用しやすい
+[m:459]ロジックが共通化できる。(スーパークラスのテンプレートメソッドでアルゴリズムが記述されているのでサブクラス側ではいちいち記述する必要がなくなる。)
+
+・抽象クラスの意義
+
+
+
+実際の処理内容はサブクラスまで行かなければならないが、抽象クラスの段階で処理の流れを形作るのは大切
+
+・スーパークラスとサブクラスの協調
+
+
+
+■スーパークラスとサブクラスは、お互いに協調しあいながらプログラムを構築している。スーパークラスでの記述を多くすれば、サブクラスでの記述は楽になるが、サブクラスの自由度は減ってしまう。逆にスーパークラスでの記述が少なければ、サブクラスの記述は大変になり、また、個々のサブクラスで処理の記述が重複してくるかもしれない。

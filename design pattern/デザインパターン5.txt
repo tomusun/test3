@@ -1,0 +1,163 @@
+デザインパターン5
+・クラス名を指定せずにインスタンスを生成したくなるなる場合がある。
+
+
+
+■クラスからインスタンスを生成するのではなく、インスタンスをコピーして新しいインスタンスを作る。
+それは以下の場合。
+■①種類が多すぎてクラスにまとめられない場合
+扱うオブジェクトの種類があまりにも多すぎて、1つ1つを別のクラスにしていたら、ソースファイルを多数作成する必要が生じてしまう場合。
+⇒サンプルプログラムでは
+・'~'を使って文字列に下線を引くもの
+・'*'を使って文字列に枠を付けるもの
+・'/'を使って文字列に枠を付けるもの
+その気になればいくらでも多くの種類を作ることができる。しかし、それらを全て別々のクラスにしてしまっては、クラスの数が多くなりすぎて、ソースプログラムを管理しにくくなる。
+■②クラスからのインスタンス生成が難しい場合
+生成させたいインスタンスが複雑な過程を経て作られるものものであり、クラスから作り上げることがとても難しい場合。例えば、グラフィックエディタなどでユーザがマウスの操作によって作り上げた図形を表すインスタンスあるとする。そのような、ユーザの操作で生成されるインスタンスを、プログラミングによってつくるのは困難。ユーザの操作で作られたインスタンスと同じものを再び作りたい場合には、今作っているインスタンスをいったん保存しておき、作りたいときにそれをコピーする。
+■③フレームワークと生成するインスタンスを分けたい場合
+インスタンスを生成するときのフレームワークを、特定のクラスに依存しないように作りたい場合。このような場合には、クラス名を指定してインスタンスを作るのではなく、前もって「ひな型」となるインスタンスを登録しておき、その登録したインスタンスをコピーすることでインスタンスを生成する。
+
+・Prototypeパターン
+
+
+
+■インスタンスから別のインスタンスを作り出すというのは、コピー機を使って書類をコピーすることに似ている。元の書類をどうやって作ったかを知らなくても、コピー機にかければ同じ書類を何枚でも作れる。
+クラスからインスタンスを生成するのではなく、インスタンスから別のインスタンスを作り出すPrototypeパターン。原型となるインスタンス、模範となるインスタンスを元に新しいインスタンスを作る。(clone)
+
+・
+●Managerクラス
+package framework;
+import java.util.*;
+
+public class Manager {
+    private HashMap showcase = new HashMap();
+    public void register(String name, Product proto) {
+        showcase.put(name, proto);
+    }
+    public Product create(String protoname) {
+        Product p = (Product)showcase.get(protoname);
+        return p.createClone();
+    }
+}
+●Productクラス
+package framework;
+import java.lang.Cloneable;
+
+public interface Product extends Cloneable {
+    public abstract void use(String s);
+    public abstract Product createClone();
+}
+●UnderlinePenクラス
+import framework.*;
+
+public class UnderlinePen implements Product {
+    private char ulchar;
+    public UnderlinePen(char ulchar) {
+        this.ulchar = ulchar;
+    }
+    public void use(String s) {
+        int length = s.getBytes().length;
+        System.out.println("\""  + s + "\"");
+        System.out.print(" ");
+        for (int i = 0; i < length; i++) {
+            System.out.print(ulchar);
+        }
+        System.out.println("");
+    }
+    public Product createClone() {
+        Product p = null;
+        try {
+            p = (Product)clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+        return p;
+    }
+}
+●MessageBoxクラス
+import framework.*;
+
+public class MessageBox implements Product {
+    private char decochar;
+    public MessageBox(char decochar) {
+        this.decochar = decochar;
+    }
+    public void use(String s) {
+        int length = s.getBytes().length;
+        for (int i = 0; i < length + 4; i++) {
+            System.out.print(decochar);
+        }
+        System.out.println("");
+        System.out.println(decochar + " "  + s + " " + decochar);
+        for (int i = 0; i < length + 4; i++) {
+            System.out.print(decochar);
+        }
+        System.out.println("");
+    }
+    public Product createClone() {
+        Product p = null;
+        try {
+            p = (Product)clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+        return p;
+    }
+}
+●Mainクラス
+import framework.*;
+
+public class Main {
+    public static void main(String[] args) {
+        // 準備
+        Manager manager = new Manager();
+        UnderlinePen upen = new UnderlinePen('~');
+        MessageBox mbox = new MessageBox('*');
+        MessageBox sbox = new MessageBox('/');
+        manager.register("strong message", upen);
+        manager.register("warning box", mbox);
+        manager.register("slash box", sbox);
+
+        // 生成
+        Product p1 = manager.create("strong message");
+        p1.use("Hello, world.");
+        Product p2 = manager.create("warning box");
+        p2.use("Hello, world.");
+        Product p3 = manager.create("slash box");
+        p3.use("Hello, world.");
+    }
+}
+
+
+
+■Productインターフェイスを実装しているクラスでさえすれば、そのインスタンスを複製することができる。
+MessageBoxクラスとUnderlinePenクラスは、どちらもProductインターフェイスを実装しているクラス。このインスタンスを作ってManagerクラスに登録しておけば、好きな時に複製することができる。
+■MessageBoxクラス＝文字列を枠線で囲って表示するクラス
+■UnderlinePenクラス＝文字列に下線を引いて表示するクラス。
+■clonableインターフェイスを実装しているクラスのインスタンスは、cloneメソッドを使って自動的に複製を行うことができる。
+■Managerクラスのshowcaseフィールドは、インスタンスの「名前」と「インスタンス」の対応関係をMapとして表現したもの。
+■ProductインターフェイスやManagerクラスのソースにMessageBoxクラス、UnderlinePenクラスのクラス名がまったく出てこないことに注意。クラス名が出てこないということは、ProductとManagerはそれらのクラスとは独立に修正ができるということを意味している。ソース中にクラスの名前を書くと、そのクラスと密接な関係ができてしまう。Managerクラスでは、具体的な個々のクラスの名前を書かず、ただProductというインターフェイス名だけを使っている。このインターフェイスだけが、Managerクラスと他のクラスの架け橋となっている。
+■MessageBoxクラス
+createCloneメソッドは、自分自身の複製を行うメソッド。ここで呼びだしているcloneメソッドは、java言語仕様で規定されており、自分自身の複製を作成するメソッド。複製を作成する時、インスタンスが持っているフィールドの値もそのまま新しいインスタンスに複製される。
+cloneメソッドでコピーを行うことができるのはjava.lang.Cloneableインターフェイスを実装しているクラスだけ。もし、このインターフェイスが実装せていない場合には、例外CloneNotSupportedExceptionが投げられる。Java言語のcloneメソッドは自分のクラス(およびサブクラス)からしか呼び出すことができないので、他のクラスのからの要請で複製を行う場合はには、createCloneのような別メソッドでcloneをくるんでやる必要がある。
+
+・ソースプログラムの中にクラス名が書かれていると、何が問題なのか
+
+
+
+ソースの中にクラス名が書かれていると、そのクラスと切り離して再利用することができなくなってしまう。
+
+・java言語のclone
+
+
+
+■cloneメソッドを実行する場合、コピー対象となるクラスはjava.lang.Cloneableインターフェイスを実装する必要があることに注意。
+コピー対象となるクラスが直接java.lang.Cloneableインターフェイスを実装しても構わないし、スーパークラスのどこかでCloneableインターフェイスを実装しても構わない。また、Cloneableインターフェイスのサブインターフェイスを実装しても構わない。
+MessageBoxクラスとUnderlinePenクラスは、どちらもProductインターフェイスを実装し、そのProductインターフェイスはCloneableインターフェイスのサブインターフェイスになっている。
+■cloneはコピーを行うだけであって、コンストラクタをを呼ぶわけではないことに注意。またインスタンス生成時に何か特殊な初期化を必要とするクラスでは、cloneメソッド内に処理を記述する必要がある。
+
+・Cloneable　メソッド
+
+
+
+■Cloneableインターフェイスに中にcloneメソッドは宣言されていないし、メソッドは１つも宣言されていない。このインターフェイスは、単に「cloneによってコピーすることができる」という印として使われている。この印をつけるインターフェイスのことをマーカーインターフェイスと呼ぶ。

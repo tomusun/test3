@@ -1,0 +1,226 @@
+・Flyweightパターン
+
+
+
+■Flyweightというのは「フライ級」のことで、ボクシングで最も軽い体重が軽い階級を表す。このデザインパターンは、オブジェクトを「軽く」するためのもの。
+ここでいう重さは、「メモリの使用量」のこと。たくさんのメモリを使うオブジェクトを「重い」と表現し、少ししかメモリを使わないオブジェクトを「軽い」と表現している。
+Javaでは
+new Something()という式で、Somethingクラスのインスタンスを作ることができる。この時、そのインスタンスを保持するために、メモリが確保される。Somethingクラスのインスタンスが数多く必要なときに、たくさんnewしてしまうと、メモリの使用量が大きくなる。
+Flyweightパターンで使っている技法は、一言でいえば
+「インスタンスをできるだけ共有させて、無駄にnewしない」というもの
+すでに作っているインスタンスを利用できるなら、それを共有して使う。
+
+・Flyweightパターンを使ったサンプルプログラム。
+重いインスタンスを作るとして「大きな文字」を表現するクラスを考える。文字を集めて「大きな文字」を作っている。
+■Main.java
+public class Main {
+    public static void main(String[] args) {
+        if (args.length == 0) {
+            System.out.println("Usage: java Main digits");
+            System.out.println("Example: java Main 1212123");
+            System.exit(0);
+        }
+        BigString bs = new BigString(args[0]);
+        bs.print();
+    }
+}
+■BigChar.java
+public class BigChar {
+    // 文字の名前
+    private char charname;
+    // 大きな文字を表現する文字列('#' '.' '\n'の列)
+    private String fontdata;
+    // コンストラクタ
+    public BigChar(char charname) {
+        this.charname = charname;
+        try {
+            BufferedReader reader = new BufferedReader(
+                new FileReader("C:\\Users\\tomusun\\Desktop\\" + "big" + charname + ".txt")
+            );
+            String line;
+            StringBuffer buf = new StringBuffer();
+            while ((line = reader.readLine()) != null) {
+                buf.append(line);
+                buf.append("\n");
+            }
+            reader.close();
+            this.fontdata = buf.toString();
+        } catch (IOException e) {
+            this.fontdata = charname + "?";
+        }
+    }
+    // 大きな文字を表示する
+    public void print() {
+        System.out.print(fontdata);
+    }
+}
+■BigCharFactory.java
+public class BigCharFactory {
+    // すでに作ったBigCharのインスタンスを管理
+    private HashMap pool = new HashMap();
+    // Singletonパターン
+    private static BigCharFactory singleton = new BigCharFactory();
+    // コンストラクタ
+    private BigCharFactory() {
+    }
+    // 唯一のインスタンスを得る
+    public static BigCharFactory getInstance() {
+        return singleton;
+    }
+    // BigCharのインスタンス生成(共有)
+    public synchronized BigChar getBigChar(char charname) {
+        BigChar bc = (BigChar)pool.get("" + charname);
+        if (bc == null) {
+            bc = new BigChar(charname); // ここでBigCharのインスタンスを生成
+            pool.put("" + charname, bc);
+        }
+        return bc;
+    }
+}
+■BigString.java
+public class BigString {
+    // 「大きな文字」の配列
+    private BigChar[] bigchars;
+    // コンストラクタ
+    public BigString(String string) {
+//string.length()が6なら6個BigCharを作っている。
+        bigchars = new BigChar[string.length()];
+        BigCharFactory factory = BigCharFactory.getInstance();
+        for (int i = 0; i < bigchars.length; i++) {
+            bigchars[i] = factory.getBigChar(string.charAt(i));
+        }
+    }
+    // 表示
+    public void print() {
+        for (int i = 0; i < bigchars.length; i++) {
+            bigchars[i].print();
+        }
+    }
+}
+
+
+
+
+■BigCharクラス
+BigCharクラスは、「大きな文字」を表現するクラス。ファイルから大きな文字のテキストを読み込んでメモリ上に蓄え、printメソッドでそれを表示する。大きな文字はメモリを消費するので、BigCharのインスタンスを共有することを考える。
+■BigCharFactoryクラス
+BigCharFactoryクラスは、BigCharクラスのインスタンスを作る。しかし、同じ文字に対応するBigCharクラスのインスタンスがすでに作ってあった場合は、それを利用して新しいインスタンスは作らない。(getBigCharメソッドは、Flyweighパターンの中心となるメソッド)これまでに作ったインスタンスは、すべてpoolというフィールドに蓄えている。目的の文字に対応するインスタンスをこれまでに作ったかどうかを高速に判断できるようにHashMapを用いている。
+与えられた1文字(例えば'3')を表すBigCharのインスタンスを対応させている。
+⇒BigCharFactoryクラスはシングルトンパターンを使って実現する。BigCharFactoryのインスタンスは１つだけ存在すればよいから。
+■BigStringクラス
+BigStringはBigCharを集めた「大きな文字列」クラス。
+「factory.getBigChar(string.charAt(i));」を使って共有される(new BigChar(string.charAt(i));では共有されない)
+
+・Flyweightパターンの登場人物
+
+
+
+■Flyweight(フライ級)の役
+普通に使うとプログラムが重くなるので共有したほうがよいものを表す役。
+BigCharクラスがこの役
+■FlyweightFactory(フライ級の工場)の役
+Flyweight役を作る工場の役。この工場を使ってFlyweight役を作ると、インスタンスが共有される。
+BigCharFactoryクラスがこの役
+■Client(依頼者)の役
+FlyweightFactory役を使ってFlyweight役を作り出し、それを利用する役。BigStringクラスがこの役
+
+
+・BigCharFactoryでは、java.util.HashMapを使って、生成したBigCharのインスタンスを管理している。このように「インスタンスを管理する」という機能をJavaで実現した時には、
+
+
+
+■必ず、「管理されているインスタンスはガベージコレクション(ゴミ取集)されない」ということを意識する必要がある。メモリに残り続けるということになる。
+※ガベージコレクションはその機能のおかげでJavaプログラマは、いったんnewしたインスタンスをほったらかしにしておくことができる。(C++では、メモリをnewで確保した場合、プログラマが明示的にdeleteで開放する必要がある。しかし、javaではdeleteする必要はないし、そもそもdeleteがない。)
+
+・BigStringクラスを使い、BigCharのインスタンスを共有した場合と共有しない場合のメモリ消費量を
+比較
+
+
+■Main.java
+public class Main {
+    private static BigString[] bsarray = new BigString[1000];
+    public static void main(String[] args) {
+        System.out.println("共有した場合:");
+        testAllocation(true);
+        System.out.println("共有しない場合:");
+        testAllocation(false);
+    }
+    public static void testAllocation(boolean shared) {
+        for (int i = 0; i < bsarray.length; i++) {
+            bsarray[i] = new BigString("1212123", shared);
+        }
+        showMemory();
+    }
+    public static void showMemory() {
+    //メモリ消費量をできるだけ正確に得るために、gcメソッドを使ってガベージコレクションを行うようにリクエストする。
+        Runtime.getRuntime().gc();
+        long used = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+        System.out.println("使用メモリ = " + used);
+    }
+}
+■BigString.java
+public class BigString {
+    // 「大きな文字」の配列
+    private BigChar[] bigchars;
+    // コンストラクタ
+    public BigString(String string) {
+        initShared(string);
+    }
+    // コンストラクタ
+    public BigString(String string, boolean shared) {
+        if (shared) {
+            initShared(string);
+        } else {
+            initUnshared(string);
+        }
+    }
+    // 共有して初期化
+    private void initShared(String string) {
+        bigchars = new BigChar[string.length()];
+        BigCharFactory factory = BigCharFactory.getInstance();
+        for (int i = 0; i < bigchars.length; i++) {
+            bigchars[i] = factory.getBigChar(string.charAt(i));
+        }
+    }
+    // 共有せず初期化
+    private void initUnshared(String string) {
+        bigchars = new BigChar[string.length()];
+        for (int i = 0; i < bigchars.length; i++) {
+            bigchars[i] = new BigChar(string.charAt(i));
+        }
+    }
+    // 表示
+    public void print() {
+        for (int i = 0; i < bigchars.length; i++) {
+            bigchars[i].print();
+        }
+    }
+}
+
+
+
+
+●実行結果
+共有した場合:
+使用メモリ = 554760
+共有しない場合:
+使用メモリ = 2959976
+※共有しない場合の方が実行速度が遅いことが分かる
+。共有しない場合には、BigCharインスタンスを作るごとにファイルを読み込まなければならないから。
+
+・サンプルプログラムのBigCharFactoryクラスではgetBigCharメソッドが「synchronized」になっている。synchronizedにしないと
+どのような不具合が生じるか。
+  // BigCharのインスタンス生成(共有)
+    public synchronized BigChar getBigChar(char charname) {
+        BigChar bc = (BigChar)pool.get("" + charname);
+        if (bc == null) {
+            bc = new BigChar(charname); // ここでBigCharのインスタンスを生成
+            pool.put("" + charname, bc);
+        }
+        return bc;
+    }
+
+
+
+■複数のスレッドから、ほぼ同時に呼ばれた場合、すでにそのインスタンスを作ったかどうかの判断を誤って、多くnewしてしまうことがあるため。
+このような現象を防ぐために、bcの値を得た時からpool.putするまでの間は、他のスレッドが割り込まないようにする必要がある。synchronizedを使うことで、それが実現できる。

@@ -1,0 +1,224 @@
+・Chain of Responsiblityパターン
+
+
+
+■たらい回しという言葉は否定的な意味合いが強いが、まさに「たらいまわし」と表現したくなる処理が必要になる場合がある。ある要求が発生した時に、その要求を処理するオブジェクトをダイレクトに決めれない場合。そのようなとき、複数のオブジェクトを鎖(チェーン)のようにつないでおき、そのオブジェクトの鎖を順次わたり歩いて、目的のオブジェクトを決定する方法が考えられる。このようなパターンをChainOfResponsibilityパターンと呼ぶ。
+■responsibilityというのは責任のことで、日本語でいえば、「責任の連鎖」ということだが、要するに「たらいまわし」という構造と考えた方が覚えやすい。
+このパターンを使うと「要求する側」、「処理する側」の結びつきを弱めることができ、それぞれを部品として独立することができる。また、状況によって要求を処理するオブジェクトが変化するようなプログラムにも対応することができる。
+人に要求がやってくる。その人が処理できるなら処理する。処理できないなら、その要求を「次の人」にたらい回しする。次の人がそれを処理できるなら処理する。処理できないなら、その要求を「さらに次の人」にたらいまわしする。そして、さらに次の人へ・・・。これがChain of Responsiblityパターン。
+
+・Chain of Responsiblityパターンを使ったサンプルプログラムとして、発生したトラブルを誰かが処理しなければならない状況
+▼Main
+public class Main {
+    public static void main(String[] args) {
+        Support alice   = new NoSupport("Alice");
+        Support bob     = new LimitSupport("Bob", 100);
+        Support charlie = new SpecialSupport("Charlie", 429);
+        Support diana   = new LimitSupport("Diana", 200);
+        Support elmo    = new OddSupport("Elmo");
+        Support fred    = new LimitSupport("Fred", 300);
+        // 連鎖の形成
+        alice.setNext(bob).setNext(charlie).setNext(diana).setNext(elmo).setNext(fred);
+        // さまざまなトラブル発生
+        for (int i = 0; i < 500; i += 33) {
+            alice.support(new Trouble(i));
+        }
+    }
+}
+▼Support
+public abstract class Support {
+    private String name;                    // このトラブル解決者の名前
+    private Support next;                 // たらい回しの先
+    public Support(String name) {           // トラブル解決者の生成
+        this.name = name;
+    }
+    public Support setNext(Support next) {  // たらい回しの先を設定
+        this.next = next;
+        return next;
+    }
+    public void support(Trouble trouble) {  // トラブル解決の手順
+        if (resolve(trouble)) {
+            done(trouble);
+        } else if (next != null) {
+            next.support(trouble);
+        } else {
+            fail(trouble);
+        }
+    }
+    public String toString() {              // 文字列表現
+        return "[" + name + "]";
+    }
+    protected abstract boolean resolve(Trouble trouble); // 解決用メソッド
+    protected void done(Trouble trouble) {  // 解決
+        System.out.println(trouble + " is resolved by " + this + ".");
+    }
+    protected void fail(Trouble trouble) {  // 未解決
+        System.out.println(trouble + " cannot be resolved.");
+    }
+}
+▼Trouble
+public class Trouble {
+    private int number;             // トラブル番号
+    public Trouble(int number) {    // トラブルの生成
+        this.number = number;
+    }
+    public int getNumber() {        // トラブル番号を得る
+        return number;
+    }
+    public String toString() {      // トラブルの文字列表現
+        return "[Trouble " + number + "]";
+    }
+}
+▼NoSupport
+public class NoSupport extends Support {
+    public NoSupport(String name) {
+        super(name);
+    }
+    protected boolean resolve(Trouble trouble) {     // 解決用メソッド
+        return false; // 自分は何も処理しない
+    }
+}
+▼LimitSupport
+public class LimitSupport extends Support {
+    private int limit;                              // この番号未満なら解決できる
+    public LimitSupport(String name, int limit) {   // コンストラクタ
+        super(name);
+        this.limit = limit;
+    }
+    protected boolean resolve(Trouble trouble) {         // 解決用メソッド
+        if (trouble.getNumber() < limit) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+}
+▼OddSupport
+public class OddSupport extends Support {
+    public OddSupport(String name) {                // コンストラクタ
+        super(name);
+    }
+    protected boolean resolve(Trouble trouble) {    // 解決用メソッド
+        if (trouble.getNumber() % 2 == 1) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+}
+▼SpecialSupport
+public class SpecialSupport extends Support {
+    private int number;                                 // この番号だけ解決できる
+    public SpecialSupport(String name, int number) {    // コンストラクタ
+        super(name);
+        this.number = number;
+    }
+    protected boolean resolve(Trouble trouble) {     // 解決用メソッド
+        if (trouble.getNumber() == number) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+}
+実行結果
+[Trouble 0] is resolved by [Bob].
+[Trouble 33] is resolved by [Bob].
+[Trouble 66] is resolved by [Bob].
+[Trouble 99] is resolved by [Bob].
+[Trouble 132] is resolved by [Diana].
+[Trouble 165] is resolved by [Diana].
+[Trouble 198] is resolved by [Diana].
+[Trouble 231] is resolved by [Elmo].
+[Trouble 264] is resolved by [Fred].
+[Trouble 297] is resolved by [Elmo].
+[Trouble 330] cannot be resolved.
+[Trouble 363] is resolved by [Elmo].
+[Trouble 396] cannot be resolved.
+[Trouble 429] is resolved by [Charlie].
+[Trouble 462] cannot be resolved.
+[Trouble 495] is resolved by [Elmo].
+
+
+
+■Troubleクラス
+発生したトラブルを表現するクラス。
+■Supportクラス
+トラブルを解決する連鎖を作るための抽象クラス。nextフィールドは、たらい回しする先を指す。setNextメソッドはたらい回しする先を設定する。
+supportメソッドは、resolveメソッドを呼び出し、戻り値がfalseなら「次の人」にたらい回しする。「次の人」がいない場合には、自分が連鎖の最後にであり、だれも処理できなかったことになるので、そのことを表示する。
+supportメソッドはTemplate Methodパターン。
+■Mainクラス
+Mainクラスではまず、Alice～Fredの6人のトラブル解決者を作成する。
+setNextメソッドを使ってAlice～Fredを一列に並べる。それから、トラブルを1個ずつ作成して順次aliceに渡し、だれがそのトラブルを解決するかを表示する。
+トラブル番号は0からはじめて33ずつ増加させているが、33ずつ増加させていることに特に意味はない。
+
+
+
+
+実行結果について
+最初はBobが頑張っているが、解決できなくなるとDianaが登場し始める。実行結果には、Aliceはまったく登場しない。Aliceはすべてのトラブルをたらい回ししているから。トラブル番号が300以上になると、このプログラムのLimitSupportのインスタンスは誰も処理が出来なくなる。しかし、奇数番号のトラブルに限り、OddSupportクラスのElmoが処理してくれている。SpecialSupportクラスのcharlieはトラブル番号429の解決専門で、実行結果には一度だけ顔を出している。
+
+・Chain of Responsiblityパターンの登場人物
+
+
+
+■Handler(処理者)の役
+Handler役は、要求処理するインターフェイス(API)を定める役。「次の人」を保持しておき、自分で処理できない要求がきたら、その人にたらい回しする。もちろん、「次の人」もHandler役。サンプルプログラムでは、Supportクラスがこの役。要求を処理するメソッドはsupportメソッド。
+■ConcreteHandler(具体的処理者)の役
+ConcreteHandler役は、要求を処理する具体的な役。サンプルプログラムでは、NoSupport、LimitSupport、OddSupport、SpecialSupportの各クラスがこの役。
+■Client(要求者の役)
+Client役は、最初のConcreteHandler役に処理を要求する役。サンプルプログラムでは、Mainクラスがこの役。
+
+・alice.setNext(bob).setNext(charlie)
+⇒[Charlie]
+
+・Chain of Responsibilityパターンのポイント
+
+
+
+■要求を出す人(Client役)と要求を処理する人(ConcreteHandler役)を緩やかに結びつけるところにある。Client役は最初の人に要求をポンと出してしまう。すると、あとは連鎖の中をその要求が流れていき、適切な処理者によって要求が処理されることになる。
+もしも、このパターンを使わないと「この要求はこの人が処理すべし」という知識を誰かが中央集権的に持っている必要がある。その知識を「要求を出す人」にもたせるのは賢明ではない。要求を出す人が処理者たちの役割分担の詳細まで知らなければならないとすると、部品としてのb独立性が損なわれてしまう。
+
+・動的に連鎖の形態を変える
+
+
+
+■サンプルプログラムではAliceからFredまでのサポートチームはいつも固定した順序になっている。
+しかし、要求を処理するConcreteHandler役のオブジェクトの関係が動的に変化するような状況も考えられる。
+Chain of Responsibilityのように委譲によってたらい回しを行っていれば、状況の変化によってConcreteHandler役を組み替えることができる。
+もしも、Chain of Responsibilityパターンを使わず、プログラムの中に「この要求ならこの処理者」という対応関係が固定的に書かれていたら、プログラムが動いている最中に処理者を変更することは難しくなる。
+ウインドウシステムでは、ユーザーがウインドウ上にコンポーネント(ボタンやテキスト入力フィールド)を自由に追加できる場合がある。このようなときはChain of Responsibilityパターンが有効的に働く。
+
+・自分の仕事に集中できる
+
+
+
+各オブジェクトが「自分の仕事に集中できる」。
+■個々のConcreteHandle役は、自分のできる仕事に集中できなかったら、あっさりと「次の人、お願いね」と渡してしまう。そうすれば、個々のConcreteHandler役に固有の内容に絞り込めることになる。
+Chain of Responsibilityパターンを使わないとする。この場合には、「偉い人が一人いて、誰が要求を処理するかを全て決定する」という方法をとることになる。あるいは「自分が処理できなかったら、あの人にまかせる。もしもそれでも駄目ならこの人、システムの状況がこうなったらあっちの人」という「仕事の振り分け」の仕事まで個々のConcreteHandler役に背負わせる方法をとることのなってしまう。
+
+・たらい回しで処理は遅くならないのか
+
+
+
+■Chain of Responsibilityパターンを使ってたらい回しを行い、適切な処理を行う相手を探すというのは、確かに柔軟性は高いかもしれないが、処理が遅くなってしまう。
+誰が要求を処理すべきかが前もって決まっており、その相手がすぐに処理をする場合と比べると、Chain of Responsibilityパターンを適用した場合の処理は遅くなる。
+しかし、これはトレードオフの問題。要求と処理者の関係が固定的で、処理が非常に重要な場合には、Chain of Responsibilityパターンを使わない方が有効な場合もある。
+
+・Chain of Responsibilityパターン
+
+
+
+■要求を処理するインスタンスを鎖状に並べて置き、要求を処理できるかどうかはを順番にチェックしていく「たらい回し」のパターンであるChain of Responsibilityパターン。
+Chain of Responsibilityパターンはウインドウシステムなどによく使われている。
+例
+コンポーネントが載ってある親ウインドウが「next」になる場合が多い。コンポーネントに渡されてきたイベント(要求)は、そのコンポーネントで処理しないとき、順次親ウインドウに渡される。
+
+・サンプルプログラムのSupportクラスではsupportメソッドはpublicになっているが、resolveメソッドはprotectedになっている。この使い分けには設計者のどのような意図が表現されているか
+
+
+
+■Supportクラスのインスタンスに対して、他のクラスから「トラブル解決」を依頼する時には、resolveメソッドでなく、supportメソッドを使ってほしいという意図が表現されている。
+resolveメソッドがpublicになっていると、Supportクラスとは無関係なクラスからもresolveメソッドが呼びだせてしまう。
+そうすると、resolveメソッドがSupportクラスで期待しているものとは異なる使い方をされてしまう危険性がある。またresolveメソッドがpublicになっていると、resolveメソッドの名前やシグネチャを将来変更した場合、修正すべき対象がプログラムのあっちこちにちらばってしまうことになる。
+※Javaではprotectedな名前はサブクラスから見えるだけではなく、同じパッケージのクラスからも見える。

@@ -1,0 +1,283 @@
+デザインパターン1
+・GoF
+
+
+
+（ゴフ）
+"Gang of Four"の略称。『オブジェクト指向における再利用のためのデザインパターン』を書いたErich Gamma、Richard Helm、Ralph Johnson、John Vlissidesの四人（ないし彼らの提唱するデザインパターン体系）をさす。"GoF"の呼称は文化大革命の「四人組」に由来。
+
+・デザインパターン
+
+
+
+■様々なプログラムで再利用できる汎用的な設計パターンのことです。プログラマの世界では、様々なデザインパターンが知られていますが、その中でも特に有名なのが「GoFデザインパターン」です。GoF（ゴフ）とは”The Gang Of Four（4人の奴等）”の略であり、エリック・ガンマ、リチャード・ヘルム、ラルフ・ジョンソン、ジョン・ブリシディースの4人を指しています。
+　彼らは、オブジェクト指向プログラミングに役立つデザインパターンを持ち寄り、それらを”Design Patterns : Elements of Reusable Object Oriented Software”というタイトルの本にまとめました
+■デザインパターンはクラスの再利用化を促進するもの。クラスを部品として使えるようにするということであり、1つの部品を修正しても、他の部品の修正が少なくて済むということ。
+
+・デザインパターン身に付け方
+
+
+
+■デザインパターンはカタログを丸暗記するためのものではない。そのパターンを身につけ、プログラムを読んでパターンを見抜き、プログラムを書くときにパターンを当てはめる練習を行う必要がある。
+
+・サンプルプログラムの入手方法
+以下からダウンロード
+http://www.hyuki.com/dp/
+またはCD-ROM
+
+・インターフェイス
+複数の意味を持つ
+
+
+
+■インターフェイス(API)
+■インターフェイス[m:459]interfaceを使って宣言されるもの
+
+・「役」
+
+
+
+デザインパターンの中に登場するクラスやインターフェイスあるいはインスタンスで、パターンの中で特定の役回りを果たすものを指す。例えば、「GamerクラスはOriginator役である」などと表現する。
+
+・UML（Unified Modeling Language）
+
+
+
+■システムを視覚化したり、仕様や設計を文書化したりするための表現方法。
+クラスやインスタンスの関係を表現するためにUMLを用いる。
+[m:459]クラス図はUMLの基本となる図のひとつで、システムを構成するクラスとそれらの関係を 表現します。
+
+・UML サブクラス スーパークラス 矢印の向き
+
+
+
+■UMLではサブクラスからスーパークラスに向けて矢印が伸びる。
+[m:459]次のように考えて覚える。サブクラスを定義するとき、extendsでスーパークラスを指定する。なのでサブクラスは必ずスーパークラスを知っている。でもスーパークラスはサブクラスを知っているとは限らない。相手を指すことができるのは相手を知っているときだけ。だからサブクラスからスーパークラスへ矢印が伸びている。
+
+・シーケンス図
+
+
+
+■UMLのシーケンス図はプログラムが動くときに、どのメソッドがどういう順番で実行されるか、どのような事象がどういう順番で起きるかを表現したもの。
+クラス図は「時間によって変化しないもの(静的な関係)」を表す。それに対してシーケンス図は「時間に従って変化するもの(動的な振るまい)」を表す。
+
+・デザインパターン 観点
+
+
+
+プログラムを完成品として見ないこと
+■デザインパターンの目標の１つは、プログラムを再利用可能にすること。つまり、どうやってプログラムを「部品」として再利用可能にすることを考えている。プログラム例を「完成品」として見るのではなく。今後「機能を拡張していくもの」、「変更を加えていくもの」としてみること。
+・どのような機能が拡張される可能性があるか?
+・その機能拡張を行うときに修正が必要になるのはどのクラスか?
+・修正が不要なのはどのクラスか?
+このような観点でデザインパターンを見ると、理解が深まる。
+・自分で例を考えること
+単にプログラム例を読むだけでなく、自分なりの例を考えてみること。また、自分が設計なプログラムを行うときに、学んだデザインパターンが当てはまらないだろうか、考える。
+
+・Iteratorパターン
+
+
+
+何かがたくさん集まっているときに、それを順番に指し示していき、全体をスキャンしていく処理を行うためのもの。
+Iteratorという英単語は何かを「繰り返す」という意味。
+
+・Iteratorパターンを使ったサンプルプログラム
+本棚(BookShelf)の中に本(Book)を入れ、その本の名前を順番に表示するというもの。
+●Aggregateインターフェイス
+public interface Aggregate {
+	/* 数え上げを行う集合体に対応するIteratorを1個作成するためのもの。
+	 集合体を数えたい、スキャンしたい、1つずつ調べた行きたいときはこの
+	 iteratorメソッドを使ってIteratorインターフェイスを実装したクラスのインスタンスを
+	 1個作る。*/
+    public abstract Iterator iterator();
+}
+●Bookクラス
+public class Book {
+    private String name;
+    public Book(String name) {
+        this.name = name;
+    }
+    public String getName() {
+        return name;
+    }
+}
+●BookShelfクラス
+/**
+ * Aggregateインターフェイスで宣言されていたiteratorメソッドの実体も書かれている。
+ *
+ */
+public class BookShelf implements Aggregate {
+	// 外から不用意に変更されるのを防ぐため。
+    private Book[] books;
+    private int last = 0;
+    // 最初にBookShelfのインスタンスを作るときに指定。
+    public BookShelf(int maxsize) {
+        this.books = new Book[maxsize];
+    }
+    public Book getBookAt(int index) {
+        return books[index];
+    }
+    public void appendBook(Book book) {
+        this.books[last] = book;
+        last++;
+    }
+    public int getLength() {
+        return last;
+    }
+    public Iterator iterator() {
+        return new BookShelfIterator(this);
+    }
+}
+●Iteratorインターフェイス
+/**
+ * 数え上げ、スキャンを行うためのインターフェイス
+ *
+ */
+public interface Iterator {
+	// 「次の要素」が存在するかどうかを調べるためのメソッド
+    public abstract boolean hasNext();
+   // 「次の要素を得るためのメソッド」 
+    public abstract Object next();
+}
+●BookShelfIteratorクラス
+public class BookShelfIterator implements Iterator {
+	// BookShelfIteratorがスキャンする本棚
+    private BookShelf bookShelf;
+    // 現在注目している本をを指す添え字
+    private int index;
+    public BookShelfIterator(BookShelf bookShelf) {
+        this.bookShelf = bookShelf;
+        this.index = 0;
+    }
+    // 次の本があるかどうか調べ、あるならtrue,ないならfalseを返す。
+    public boolean hasNext() {
+    	// bookShelf.getLength()は本の冊数
+        if (index < bookShelf.getLength()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    // 現在注目している本(Bookのインスタンス)を返し、次に進める。
+    public Object next() {
+        Book book = bookShelf.getBookAt(index);
+        index++;
+        return book;
+    }
+}
+●Mainクラス
+public class Main {
+    public static void main(String[] args) {
+        BookShelf bookShelf = new BookShelf(4);
+        bookShelf.appendBook(new Book("Around the World in 80 Days"));
+        bookShelf.appendBook(new Book("Bible"));
+        bookShelf.appendBook(new Book("Cinderella"));
+        bookShelf.appendBook(new Book("Daddy-Long-Legs"));
+        bookShelf.appendBook(new Book("East of Eden"));
+        bookShelf.appendBook(new Book("Frankenstein"));
+        bookShelf.appendBook(new Book("Gulliver's Travels"));
+        bookShelf.appendBook(new Book("Hamlet"));
+        Iterator it = bookShelf.iterator();
+        while (it.hasNext()) {
+            Book book = (Book)it.next();
+            System.out.println(book.getName());
+        }
+    }
+}
+■実行結果
+Around the World in 80 Days
+Bible
+Cinderella
+Daddy-Long-Legs
+※AggregateとIteratorという2つのインターフェイスが対になっているように、BookShelfとBookShelfIterator2つのクラスも対になっている。
+※hasNextメソッドは「次にnextメソッドを読んでも大丈夫かどうかを調べるもの。」
+
+・なぜ集合体の外にIterator役などというものを作る必要があるのか。
+
+
+
+
+■大きな理由は、Iteratorを使うことで、実装とは切り離して、数え上げを行うことができるから。
+ while (it.hasNext()) {
+            Book book = (Book)it.next();
+            System.out.println(book.getName());
+        }
+⇒BookShelfの実装で使われているメソッドは呼び出されていない。
+つまり、上のwhileループは、BookShelfの実装には依存しないということになる。
+BookShelfを実装した人が、配列を使って本を管理することをやめて、java.util.Vectorを使うようにプログラム修正したとする。BookShelfをどのように修正しようともBookShelfがiteratorメソッドを持っており、正しいiteratorを返してくれれば、上記のループは変更しなくても動作する。
+■デザインパターンはクラスの再利用化を促進するもの。クラスを部品として使えるようにするということであり、1つの部品を修正しても、他の部品の修正が少なくて済むということ。
+
+○java.util.Vector
+
+
+
+■java.util.Vectorは随分前にオワコン化している
+//Vector のインスタンス化
+Vector vec=new Vector();
+
+System.out.println("----追加----");
+//オブジェクトの作成
+String obj1=new String("Hello World!");
+StringBuffer obj2=new StringBuffer("こんにちは、世界！");
+//要素の追加
+vec.addElement(obj1);
+vec.addElement(obj2);
+//表示
+System.out.println(vec);
+
+・Iterator(反復子)の役
+
+
+
+要素を順番にスキャンしていくインターフェイス(API)を定める役。
+Iteratorインターフェイスがこの役をつとめている。
+
+・ConcreteIterator(具体的な反復子)
+
+
+
+■Iterator役が定めたインターフェイス(API)を定める役。BookShelfIteratorがこの役。スキャンするために必要な情報を持っておく必要がある。BookShelfインスタンスをbookShelfで覚えており、注目している本をindexフィールドで覚えていた。
+
+・Aggregate(集合体)の役
+
+
+
+■Iterator役を作り出すインターフェイス(API)を定める役。そのインターフェイスは「私が持っている要素を順番にスキャンしてくれる人」を作り出すメソッド。Aggregateインターフェイスがこの役をつとめ、Iteratorメソッドを定めていた。
+
+・ConcreteAggregate(具体的な集合体)の役
+
+
+
+■Aggregate役が定めたインターフェイス(API)を実際に実装する役。具体的なIterator役、すなわちConcreteIterator役のインスタンスを作り出す。BookShelfクラスがこの役をつとめ、iteratorメソッドを実装していた。
+
+・抽象クラスやインターフェイスの使い方がよくわからない人
+ 
+
+
+■すべての問題を具体的なクラスだけで解決させてしまいたくなる。
+[m:459]しかし、具体的なクラスだけを使うと、クラス間の結合が強くなってしまし、備品として再利用することが難しくなる。結合を弱め、、クラスを部品として再利用しやすくするために、抽象クラスやインターフェイスが導入される。
+
+・public static void main(String[] args) {
+	// TODO 自動生成されたメソッド・スタブ
+	List<String> abc = new ArrayList<String>(2);
+	abc.add("a");
+	abc.add("b");
+	abc.add("c");
+	abc.add("d");
+	System.out.println(abc.size());
+
+
+	String[] bc = new String[2];
+	bc[0] = "ab";
+	bc[1] = "ab";
+	bc[2] = "ab";
+	bc[3] = "ab";
+}
+実行結果
+
+
+
+4
+Exception in thread "main" java.lang.ArrayIndexOutOfBoundsException: 2
+	at rensyuu1.sdfsdf.main(sdfsdf.java:21)
+※リストは最初にサイズを決めてサイズ以上になってもエラーにならない。

@@ -1,0 +1,148 @@
+・Observerパターン
+
+
+
+Observerとは観察者という意味。
+Observerパターンでは、観察対象の状態が変化すると、観察者に対して通知される。Observerパターンは状態変化に応じた処理を記述する時に有効。
+
+・サンプルプログラム
+数をたくさん生成するオブジェクトを観察者が観察して、その値を表示するするという単純なもの。ただし、表示の方法は観察者によって異なる。DigitObserverは値を数字で表示するが、GraphObserverは値を簡易グラフで表示する。
+
+
+
+■Main.java
+public class Main {
+    public static void main(String[] args) {
+        NumberGenerator generator = new RandomNumberGenerator();
+        Observer observer1 = new DigitObserver();
+        Observer observer2 = new GraphObserver();
+        generator.addObserver(observer1);
+        generator.addObserver(observer2);
+        generator.execute();
+    }
+}
+■Observer.java
+public interface Observer {
+    public abstract void update(NumberGenerator generator);
+}
+■NumberGenerator.java
+public abstract class NumberGenerator {
+    private ArrayList observers = new ArrayList();        // Observerたちを保持
+    public void addObserver(Observer observer) {    // Observerを追加
+        observers.add(observer);
+    }
+    public void deleteObserver(Observer observer) { // Observerを削除
+        observers.remove(observer);
+    }
+    public void notifyObservers() {               // Observerへ通知
+        Iterator it = observers.iterator();
+        while (it.hasNext()) {
+            Observer o = (Observer)it.next();
+            o.update(this);
+        }
+    }
+    public abstract int getNumber();                // 数を取得する
+    public abstract void execute();                 // 数を生成する
+}
+■RandomNumberGenerator.java
+public class RandomNumberGenerator extends NumberGenerator {
+    private Random random = new Random();   // 乱数生成機
+    private int number;                     // 現在の数
+    public int getNumber() {                // 数を取得する
+        return number;
+    }
+    public void execute() {
+        for (int i = 0; i < 20; i++) {
+            number = random.nextInt(50);
+            notifyObservers();
+        }
+    }
+}
+■DigitObserver.java
+public class DigitObserver implements Observer {
+    public void update(NumberGenerator generator) {
+        System.out.println("DigitObserver:" + generator.getNumber());
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+        }
+    }
+}
+■GraphObserver.java
+public class GraphObserver implements Observer {
+    public void update(NumberGenerator generator) {
+        System.out.print("GraphObserver:");
+        int count = generator.getNumber();
+        for (int i = 0; i < count; i++) {
+            System.out.print("*");
+        }
+        System.out.println("");
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+        }
+    }
+}
+
+
+
+実行結果
+DigitObserver:5
+GraphObserver:*****
+DigitObserver:23
+GraphObserver:***********************
+DigitObserver:28
+GraphObserver:****************************
+～
+※consoleに20個分表示される。（for (int i = 0; i < 20; i++))の箇所より。
+
+■Observerインターフェイス
+「観察者」を表現するインターフェイス。具体的な観察者はこのインターフェイスを実装する。なお、このObserverインターフェイスはサンプルプログラム用に作ったもので、Javaのクラスライブラリに登場するjava.util.Observerとは異なる。
+updateメソッドを呼び出すのは、数を生成するNumberGenerator(generatorとは「生成するもの」、「発生装置」という意味)。updateメソッドはNumberGeneratorが「私の内容が更新されました。表示の方法も更新してください」とObserverに伝えるためのメソッド。
+■NumberGeneratorクラス
+数を生成する抽象クラス。
+notifyObserversメソッドは、Observer全員に対して「私の内容が更新されたので、あなたの表示を更新させてください」と伝えるもの。
+NumberGeneratorはupdateメソッドを使って「更新されたよ」とObserverに通知。
+■RandomNumberGeneratorクラス
+executeメソッドは乱数(0～49の範囲の整数)を20個生成し、そのつど、notifyObserversを使って、観察者に通知する。
+■DigitObserverクラス
+Observerインターフェイスを実装しているクラスで、観察した数を「数字」で表示するためのもの。updateメソッドの中で引数として与えられたNumberGeneratorのgetNumberメソッドを使って数を取得し、それを表示する。ここでは、表示の様子がよくわかるようにThread.sleepを使ってスピードを遅くしている。
+■GraphObserverクラス
+観察した数を*********にような「簡易グラフ」で表示する。
+■mainクラス
+RandomNumberGeneratorのインスタンスを1個作り、その観察者を2個作る。observer1はDigitObserverの、observer2はGraphObserverのインスタンス。
+addObserverメソッドを使って観察者を登録した後、generator.executeを使って数を生成する。
+
+・Observerパターンの登場人物
+
+
+
+■Subject(被験者)の役
+Subject役は「観察される側」を表す。Subject役は、観察者であるObserver役を登録するメソッドと、削除するメソッドを持っている。また、「現在の状態を取得する」メソッドが宣言されている。NumberGeneratorクラスがこの役
+■ConcreteSubject(具体的な被験者)の役
+具体的な「観察される側」を表現する役。状態が変化したら、そのことを登録されているObserver役に伝える。RandomNumberGeneratorクラスがこの役
+■Observer役
+Subject(被験者)役から「状態が変化しましたよ」と教えてもらう役。そのためのメソッドがupdate。
+Observerインターフェイスがこの役
+■ConcreteObserver(具体的な観察者)の役
+ConcreteObserver役は具体的なObserver。updateメソッドが呼び出されると、そのメソッドの中でSubject役の現在の状態を取得する。GraphObserver、DigitObserverがこの役
+
+・Observerパターンでは、状態を持っているConcreteSubject役と、状態変化を通知してもらうConcreteObserver役が登場。その2つの役目をつないでいるのがインターフェイス(API)としてのSubject役とObserver役。
+一般のObserverパターンでは、Subject役がupdateメソッドを呼ぶきっかけが、
+
+
+
+■他のクラスからくる場合もある。例えば、GUIではユーザーがボタンを押すというイベントをきっかけとして、updateメソッドが呼び出される場合がよくある。
+
+・Observerは「観察者」だが、実際には
+
+
+
+■Observer役は能動的に「観察」するのではなく、Subject役から「通知」されるのを受動的に待っていることになる。
+
+・MVCにおけるobserverパターン
+
+
+
+■MVCの中のModelとViewの関係は、
+ObserverパターンのSubject役とObserver役の関係に対応する。

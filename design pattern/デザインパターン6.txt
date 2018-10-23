@@ -1,0 +1,269 @@
+デザインパターン6
+・Builderパターン
+
+
+
+構造を持ったインスタンスをくみ上げていくBuilderパターン。
+
+・サンプルとしてBuilderパターンを作って「文書」を作成するプログラムを作る。以下の構造。
+・タイトルをいくつか作る
+・文字列をいくつか含む
+・箇条書きの項目をいくつか含む。
+
+
+
+●Builderクラス
+package rensyuu10;
+public abstract class Builder {
+    public abstract void makeTitle(String title);
+    public abstract void makeString(String str);
+    public abstract void makeItems(String[] items);
+    public abstract void close();
+}
+●Directorクラス
+public class Director {
+    private Builder builder;
+    public Director(Builder builder) {      // Builderのサブクラスのインスタンスが与えられるので、
+        this.builder = builder;             // builderフィールドに保持しておく。
+    }
+    public void construct() {             // 文書構築
+        builder.makeTitle("Greeting");              // タイトル
+        builder.makeString("朝から昼にかけて");     // 文字列
+        builder.makeItems(new String[]{             // 箇条書き
+            "おはようございます。",
+            "こんにちは。",
+        });
+        builder.makeString("夜に");                 // 別の文字列
+        builder.makeItems(new String[]{             // 別の箇条書き
+            "こんばんは。",
+            "おやすみなさい。",
+            "さようなら。",
+        });
+        builder.close();                 // 文書を完成させる
+    }
+}
+●HTMLBuilderクラス
+public class HTMLBuilder extends Builder {
+    private String filename;                                    // 作成するファイル名
+    private PrintWriter writer;                                 // ファイルに書き込むPrintWriter
+    public void makeTitle(String title) {                       // HTMLファイルでのタイトル
+        filename = title + ".html";                                 // タイトルを元にファイル名決定
+        try {
+            writer = new PrintWriter(new FileWriter(filename));     // PrintWriterを作る
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        writer.println("<html><head><title>" + title + "</title></head><body>");    // タイトルを出力
+        writer.println("<h1>" + title + "</h1>");
+    }
+    public void makeString(String str) {                        // HTMLファイルでの文字列
+        writer.println("<p>" + str + "</p>");                       // <p>タグで出力
+    }
+    public void makeItems(String[] items) {                     // HTMLファイルでの箇条書き
+        writer.println("<ul>");                                     // <ul>と<li>で出力
+        for (int i = 0; i < items.length; i++) {
+            writer.println("<li>" + items[i] + "</li>");
+        }
+        writer.println("</ul>");
+    }
+    public void close() {                                       // 文書の完成
+        writer.println("</body></html>");                           // タグを閉じる
+        writer.close();                                             // ファイルをクローズ
+    }
+    public String getResult() {                                 // 完成した文書
+        return filename;                                            // ファイル名を返す
+    }
+}
+●TextBuilderクラス
+public class TextBuilder extends Builder {
+    private StringBuffer buffer = new StringBuffer();           // このフィールドに文書を構築していく
+    public void makeTitle(String title) {                       // プレーンテキストでのタイトル
+        buffer.append("==============================\n");          // 飾り線
+        buffer.append("『" + title + "』\n");                       // 『』つきのタイトル
+        buffer.append("\n");                                        // 空行
+    }
+    public void makeString(String str) {                        // プレーンテキストでの文字列
+        buffer.append('■' + str + "\n");                           // ■つきの文字列
+        buffer.append("\n");                                        // 空行
+    }
+    public void makeItems(String[] items) {                     // プレーンテキストでの箇条書き
+        for (int i = 0; i < items.length; i++) {
+            buffer.append("　・" + items[i] + "\n");                // ・つきの項目
+        }
+        buffer.append("\n");                                        // 空行
+    }
+    public void close() {                                       // 文書の完成
+        buffer.append("==============================\n");          // 飾り線
+    }
+    public String getResult() {                                 // 完成した文書
+        return buffer.toString();                                   // StringBufferをStringに変換
+    }
+}
+●Mainクラス
+public class Main {
+    public static void main(String[] args) {
+        if (args.length != 1) {
+            usage();
+            System.exit(0);
+        }
+        if (args[0].equals("plain")) {
+            TextBuilder textbuilder = new TextBuilder();
+            Director director = new Director(textbuilder);
+            director.construct();
+            String result = textbuilder.getResult();
+            System.out.println(result);
+        } else if (args[0].equals("html")) {
+            HTMLBuilder htmlbuilder = new HTMLBuilder();
+            Director director = new Director(htmlbuilder);
+            director.construct();
+            String filename = htmlbuilder.getResult();
+            System.out.println(filename + "が作成されました。");
+        } else {
+            usage();
+            System.exit(0);
+        }
+    }
+    public static void usage() {
+        System.out.println("Usage: java Main plain      プレーンテキストで文書作成");
+        System.out.println("Usage: java Main html       HTMLファイルで文書作成");
+    }
+}
+実行結果
+==============================
+『Greeting』
+
+■朝から昼にかけて
+
+　・おはようございます。
+　・こんにちは。
+
+■夜に
+
+　・こんばんは。
+　・おやすみなさい。
+　・さようなら。
+
+==============================
+■Builderクラスでは、文書を構成するためのメソッドを定める。そして、Directorクラスがそのメソッドを使って、1つの文書を作る。
+Builderクラスのサブクラスとして以下のクラスを定義
+・TextBuilderクラス・・・プレーンテキスト(普通の文字列)を使って文書を作る。
+・HTMLBuilderクラス・・・ＨＴＭＬを使って文書を作る。
+■Directorクラス
+与えられたBuilderクラスのサブクラスの種類によって、Directorクラスが作る具体的な文書の形式が定まる。
+■TextBuilderもHTMLBuilderもBuilderクラスのサブクラスであり、DirectorはBuilderのメソッドのみを使って文書を作る。Builderのメソッドのみを使うということはDirectorは、実際に動いているのがTextBuilderなのかHTMLBuilderなのかを意識していないことになる。
+Builderは、文書を構築するという目的を達成するのに必要かつ十分なメソッド群を宣言している必要がある。ただし、プレーンテキストやＨＴＭＬファイルに固有のメソッドまでをBuilderが提供してはいけない。
+
+・登場人物
+
+
+
+■Builder(建築者)の役
+Builder役は、インスタンスを作成するためのインターフェイス(ＡＰＩ)を定める。Builder役には、インスタンスの各部分を作るためのメソッドが用意される。Builderクラスがこの役をつとめる。
+■ConcreteBuilder(具体的建築者)の役
+ConcreteBuilder役はBuilder役のインターフェイス(ＡＰＩ)を実装しているクラス。実際のインスタンス作成で呼び出されるメソッドが、ここで定義される。また、最終的にできた結果を得るためのメソッドが
+用意される。TextBuilderやHTMLBuilderクラスがこの役・
+■Director(監督者)の役
+Directorの役は、Builder役のインターフェイス(ＡＰＩ)を使ってインスタンスを生成する。ConcreteBuilder役に依存したプログラミングは行わない。ConcreteBuilder役が何であってもうまく機能するように、Builder役のメソッドのみを使う。Directorクラスがこの役。
+■Client(依頼人)の役
+Builderパターンを利用する役。Client役はBuilderパターンの中には含まれていない。Mainクラスがこの役。
+■TextBuilderのインスタンスをDirectorに与えても、HTMLBuilderのインスタンスをDirector役に与えても、正しく機能するのは、DirectorクラスがBuilderクラスの具体的なサブクラスを知らないから。
+知らないからこそ入れ替えができる。入れ替えられるからこそ、部品としての価値が高い。この「交換可能性」について、クラスの設計者は常に意識しておく必要がある。
+
+・クラスの役割を理解していないと、修正や追加を行う場合、どのクラスを変更すべきかの判断を誤る。
+例えば、
+
+
+
+■Builderクラスを修正するということは、Directorが呼び出すメソッドを修正することであり、またBuilderクラスのサブクラスに全部に影響が及ぶということ。あるいは、うっかりDirectorクラスがTextBuilderクラスのメソッドを呼ぶような修正をしたりすると、部品としての独立性が失われ、HTMLBuilderに切り替えた時にうまく動かなくなる可能性がある。
+
+・Javaでのインスタンスの作り方
+
+
+
+■■new
+例
+Something something = new Something();
+■■clone
+例
+●Mainクラス
+public class Snippet {
+	public static void main(String[] args) {
+
+		Something something = new Something();
+		something.setName("aaa");
+		try {
+			System.out.println(something.getName());
+			System.out.println(something.createClone().getName());
+		} catch (InstantiationException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		}
+	}
+}
+●Somethingクラス
+public class Something implements Cloneable{
+
+	private String name;
+
+	public Something createClone(){
+		try {
+			return (Something) this.clone();
+		} catch (CloneNotSupportedException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+}
+実行結果
+aaa
+aaa
+■■newInstanceメソッドを利用
+Somethingクラスのインスタンスがあるとすると次の式でSomethingクラスのインスタンスを新たに作ることができる。
+something.getClass().newInstance();
+※newInstanceはInstantiationExceptionやIllegalAccessExceptionを投げるのでtrycatchかthorows宣言が必要。
+●Mainクラス
+public class Snippet {
+	public static void main(String[] args) {
+
+		Something something = new Something();
+		something.setName("aaa");
+		try {
+			Something something2 = something.getClass().newInstance();
+			System.out.println(something.getName());
+			System.out.println(something2.getName());
+		} catch (InstantiationException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		}
+●Somethingクラス
+public class Something 
+	private String name;
+
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+}
+または
+●public class Snippet {
+	public static void main(String[] args) {
+			try {
+				Something something3 = (Something) Class.forName("rensyuu12.Something").newInstance();
+				something3.setName("ccc");
+				System.out.println(something3.getName());
+
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			}
+
+

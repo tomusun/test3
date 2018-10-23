@@ -1,0 +1,275 @@
+○Mediatorパターン
+
+
+
+メディエイターパターン
+■グループにやってきた頼りになる「相談役」を想像するのがいい。困ったことがあったら、相談役に知らせる。全体に波及する出来事が起こったら、相談役に知らせる。相談役から言われたことは素直に実行する。グループの各メンバーが勝手に他のメンバーとコミュニケートして判断するのではなく、いつも頼りになる相談役を通して起こすようにする。一方、相談役はグループのメンバーから上がってきた報告を基に大局的な判断を行い、各メンバーに指示を出す。Mediatorパターンは以上のようなデザインパターン。
+■Mediatorパターンでは「相談役」はmediator(調停者)、「各メンバー」はcolleage(同僚)と呼ばれる。
+■多数のオブジェクトの間の調整をおこなわなければならないときこそ、Mediatorパターンの出番。個々のオブジェクトが互いに通信しあうのではなく、「頼りになる相談役」を置き、その相談役とだけ通信することにする。そして、表示のコントロールのロジックは、相談役の中にだけ記述する。
+
+○サンプルプログラム
+「名前とパスワードを入力するログインダイアログ」
+▼ゲストログインが選ばれているときには、ユーザ名とパスワードを「無効状態」にして、文字列が入力できないようにする。
+▼ユーザログインが選ばれているときには、ユーザ名は「有効状態」になり、文字列が入力できるようになります。
+▼ユーザ名に文字が1文字も入っていない場合には、パスワードは「無効状態」になる。
+▼ユーザ名に文字が1文字でも入っていたら、パスワードは「有効状態」になる(もちろんゲストログインの場合には、パスワードは「無効状態」である)
+▼ユーザ名とパスワードの両方に文字が1文字でも入っている場合には、OKボタンは「有効状態」になり、押せる状態になるが、ユーザ名とパスワードのどちらか一方が空にならば、OKボタンは「無効状態」になって、押せない状態になる。(もちろんゲストログインの場合には、OKボタンは「有効状態」である)
+▼Cancelボタンを常に「有効状態」で、いつでも押せる状態になっている。
+
+■Colleagueインターフェイス
+public interface Colleague {
+    public abstract void setMediator(Mediator mediator);
+    public abstract void setColleagueEnabled(boolean enabled);
+}
+■ColleagueButton,java
+import java.awt.Button;
+
+public class ColleagueButton extends Button implements Colleague {
+    private Mediator mediator;
+    public ColleagueButton(String caption) {
+        super(caption);
+    }
+    public void setMediator(Mediator mediator) {            // Mediatorを保持
+        this.mediator = mediator;
+    }
+    public void setColleagueEnabled(boolean enabled) {      // Mediatorから有効/無効が指示される
+        setEnabled(enabled);
+    }
+}
+■ColleagueCheckbox.java
+import java.awt.Checkbox;
+import java.awt.CheckboxGroup;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+
+public class ColleagueCheckbox extends Checkbox implements ItemListener, Colleague {
+    private Mediator mediator;
+    public ColleagueCheckbox(String caption, CheckboxGroup group, boolean state) {  // コンストラクタ
+        super(caption, group, state);
+    }
+    public void setMediator(Mediator mediator) {            // Mediatorを保持
+        this.mediator = mediator;
+    }
+    public void setColleagueEnabled(boolean enabled) {      // Mediatorから有効/無効が指示される
+        setEnabled(enabled);
+    }
+    public void itemStateChanged(ItemEvent e) {             // 状態が変化したらMediatorに通知
+        mediator.colleagueChanged();
+    }
+}
+■ColleagueTextField.java
+import java.awt.Color;
+import java.awt.TextField;
+import java.awt.event.TextEvent;
+import java.awt.event.TextListener;
+
+public class ColleagueTextField extends TextField implements TextListener, Colleague {
+    private Mediator mediator;
+    public ColleagueTextField(String text, int columns) {   // コンストラクタ
+        super(text, columns);
+    }
+    public void setMediator(Mediator mediator) {            // Mediatorを保持
+        this.mediator = mediator;
+    }
+    public void setColleagueEnabled(boolean enabled) {      // Mediatorから有効/無効が指示される
+        setEnabled(enabled);
+        setBackground(enabled ? Color.white : Color.lightGray);
+    }
+    public void textValueChanged(TextEvent e) {             // 文字列が変化したらMediatorに通知
+        mediator.colleagueChanged();
+    }
+}
+■LoginFrame.java
+import java.awt.CheckboxGroup;
+import java.awt.Color;
+import java.awt.Frame;
+import java.awt.GridLayout;
+import java.awt.Label;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class LoginFrame extends Frame implements ActionListener, Mediator {
+    private ColleagueCheckbox checkGuest;
+    private ColleagueCheckbox checkLogin;
+    private ColleagueTextField textUser;
+    private ColleagueTextField textPass;
+    private ColleagueButton buttonOk;
+    private ColleagueButton buttonCancel;
+
+    // コンストラクタ。
+    // Colleagueたちを生成し、配置した後に表示を行う。
+    public LoginFrame(String title) {
+        super(title);
+        setBackground(Color.lightGray);
+        // レイアウトマネージャを使って4×2のグリッドを作る
+        setLayout(new GridLayout(4, 2));
+        // Colleagueたちの生成
+        createColleagues();
+        // 配置
+        add(checkGuest);
+        add(checkLogin);
+        add(new Label("Username:"));
+        add(textUser);
+        add(new Label("Password:"));
+        add(textPass);
+        add(buttonOk);
+        add(buttonCancel);
+        // 有効/無効の初期指定
+        colleagueChanged();
+        // 表示
+        pack();
+        show();
+    }
+
+    // Colleagueたちを生成する。
+    public void createColleagues() {
+        // 生成
+        CheckboxGroup g = new CheckboxGroup();
+        checkGuest = new ColleagueCheckbox("Guest", g, true);
+        checkLogin = new ColleagueCheckbox("Login", g, false);
+        textUser = new ColleagueTextField("", 10);
+        textPass = new ColleagueTextField("", 10);
+        textPass.setEchoChar('*');
+        buttonOk = new ColleagueButton("OK");
+        buttonCancel = new ColleagueButton("Cancel");
+        // Mediatorのセット
+        checkGuest.setMediator(this);
+        checkLogin.setMediator(this);
+        textUser.setMediator(this);
+        textPass.setMediator(this);
+        buttonOk.setMediator(this);
+        buttonCancel.setMediator(this);
+        // Listenerのセット
+        checkGuest.addItemListener(checkGuest);
+        checkLogin.addItemListener(checkLogin);
+        textUser.addTextListener(textUser);
+        textPass.addTextListener(textPass);
+        buttonOk.addActionListener(this);
+        buttonCancel.addActionListener(this);
+    }
+
+    // Colleageからの通知で各Colleageの有効/無効を判定する。
+    public void colleagueChanged() {
+        if (checkGuest.getState()) { // Guest mode
+            textUser.setColleagueEnabled(false);
+            textPass.setColleagueEnabled(false);
+            buttonOk.setColleagueEnabled(true);
+        } else { // Login mode
+            textUser.setColleagueEnabled(true);
+            userpassChanged();
+        }
+    }
+    // textUserまたはtextPassの変更があった。
+    // 各Colleageの有効/無効を判定する。
+    private void userpassChanged() {
+        if (textUser.getText().length() > 0) {
+            textPass.setColleagueEnabled(true);
+            if (textPass.getText().length() > 0) {
+                buttonOk.setColleagueEnabled(true);
+            } else {
+                buttonOk.setColleagueEnabled(false);
+            }
+        } else {
+            textPass.setColleagueEnabled(false);
+            buttonOk.setColleagueEnabled(false);
+        }
+    }
+    public void actionPerformed(ActionEvent e) {
+        System.out.println(e.toString());
+        System.exit(0);
+    }
+}
+■Main.java
+public class Main {
+    static public void main(String args[]) {
+        new LoginFrame("Mediator Sample");
+    }
+}
+■Mediator.java
+public interface Mediator {
+    public abstract void createColleagues();
+    public abstract void colleagueChanged();
+}
+
+
+
+
+■Mediatorインターフェイス
+「相談役」をインターフェイスを表現するインターフェイス。
+colleagueChangedメソッドは、各メンバーであるColleagueたちから呼び出されるメソッド。このメソッドは、相談役への「相談」に相当する。ラジオボタンやテキストフィールドの状態が変化した時に、このメソッドが呼び出される。
+■Colleagueインターフェイス
+相談役に相談を持ち掛けるインターフェイス。
+setMediatorメソッドは、Mediatorインターフェイスを実装したLoginFrameクラスが最初に呼び出すメソッド。これは「相談役は私なんだから、覚えてくださいね」というメソッド。このメソッドの引数で渡されたインスタンスは、あとで相談が必要になったとき(colleagueChangedを呼び出すとき)に使う
+setColleagueEnabledメソッドは、相談役からやってくる「指示」に相当する。引数のenabledがtrueなら自分自身を「有効状態」にし、falseなら自分自身を「無効状態」にする。このメソッドは、自分が「有効状態」になるべきか、「無効状態」になるべきなのかを自分で判断するのでなく、相談役の判断に従って決めるということを表す。
+なお、MediatorインターフェイスとのColleagueインターフェイスにどのようなメソッドを持たせるかは、作成すアプリケーションによって変化する。ここではMediator側にcolleagueChangedメソッドを置き、Colleague側にsetColleagueEnabledメソッドを置くが、もっと細かな通信をMediator役とColleague役で行う必要があるなら、メソッドの数を増やす必要がある。同じMediatorパターンを使っていても、実際のメソッドはアプリケーションによって異なる。
+■ColleagueButtonクラス
+java.awt.Buttonのサブクラス
+■ColleagueTextFieldクラス
+java.awt.TextFieldのサブクラスで、Colleagueインターフェイスを実装している。また、このクラスはjava.awt.event.TextListenerインターフェイスも実装している。こうするのは、テキストの内容が変化したことをtextValueChangedメソッでキャッチしたいから。
+Javaのクラスでは複数のクラスから拡張(extends)することはできないが、複数のインターフェイス(implements)を実装することはできる。setColleagueEnabledメソッドでは、setEnabledメソッドだけでなく、setBackgroundメソッドも呼んでいる。
+これは有効時には背景色を白色に無効時には明るいグレーライトグレー)にしたいと考えたから。
+textValueChangedメソッドは、TextListenerインターフェイスのためのメソッド。
+このメソッドは、テキストの内容に変更があった場合にAWTのフレームワーク側から呼び出される。
+■ColleagueCheckboxクラス
+java.awt.Checkboxクラスのサブクラス。サンプルプログラムでは、チェックボックスとしてではなく、ラジオボタンとして使われる。(CheckboxGroupを利用)
+このクラスはjava.awt.event.ItemListenerインターフェイスも実装している。これはラジオボタンの状態変化を、itemStateChangedメソッドでキャッチしたいから。
+■LoginFrameクラス
+java.awt.Frame(GUIアプリケーションを作るためのクラス)のサブクラスでMediatorインターフェイスを実装している。
+コンストラクタの中では、次の仕事をしている。
+・背景色の設定
+・レイアウトマネージャの設定(子ウインドウを縦4個×横2個に配置する)
+・createColleaguesメソッドでColleagueの生成
+・Colleagueの配置
+・初期状態の設定
+・表示
+createColleaguesメソッドでは、このダイアログで必要なColleagueを生成し、それをフィールドに保持している。また、各Colleagueに対してsetMediatorを呼び出し、「あなたの相談役は私だからね、なにかあったら知らせるんだよ」と言っておく。
+このほかに各Listenerの設定も行う。これは、各Listenerが各AWTのフレームワークから適切に呼び出されるようにするため。
+このプログラムで最も大事なメソッドはLoginFrameクラスのcolleagueChangedメソッド。
+全てのColleagueの相談が、ここのcolleagueChangedメソッドに集結する。
+あとは、ラジオボタンの状態を得るgetStateメソッドやテキストフィールドも文字列を得るgetTextメソッド等を駆使して、あの複雑な条件をコーディングすればよいことになる。
+
+○Mediatorパターンの登場人物
+
+
+
+■Mediator役
+Colleague役と通信を行って、調整をおこなうためのインターフェイス(API)を定める。サンプルプログラムでは、Mediatorインターフェイス。
+■ConcreteMediator(具体的な調停者、仲介者)の役
+Mediator役のインターフェイス(API)を実装し、実際の調整をおこなう。サンプルプログラムではLoginFrameクラス。
+■Colleagueの役
+Mediator役と通信を行うインターフェイス(API)を定める。サンプルプログラムではColleagueインターフェイスがこの役
+■ConcreteColleague(具体的な同僚)の役
+ConcreteColleague役は、Colleague役のインターフェイス(API)を実装する。サンプルプログラムではColleagueButton、ColleagueTextField、ColleagueCheckboxの各クラスがこの役をつとめる
+
+○// Mediatorのセット
+checkGuest.setMediator(this);
+checkLogin.setMediator(this);
+textUser.setMediator(this);
+のthisの中身
+
+
+
+⇒rensyuu18.LoginFrame[frame0,0,0,0x0,invalid,hidden,layout=java.awt.GridLayout,title=Mediator Sample,resizable,normal]
+
+○再利用できるのは何か?
+
+
+
+■ConcreteColleague役は再利用しやすいが、ConcreteMediator役は再利用しにくいといえる。
+■例えば、ログインダイアログと別の、新しいダイアログを作るとする。
+そのとき、ConcreteColleague役であるColleagueButton、ColleagueTextField、ColleagueCheckboxは、その新しいダイアログでも再利用できる。なぜなら、ConcreteColleague役の中には、特定のダイアログに依存したコードは含まれていないから。
+コードのうち、アプリケーションへの依存性の高い部分は、ConcreteMediator役であるLoginFrameクラスの中に閉じ込まれている。
+アプリケーションへの依存度が高いということは、再利用性が低いということ。LoginFrameクラスをそのまま他のダイアログに再利用することは難しい。
+
+○Mediatorパターン
+
+
+
+複雑に絡みあうオブジェクトたちの相互の通信をやめ、Mediator役に情報を集中させることによって処理を整理する。GUIアプリケーションで時に効果的なパターン。
+
+○サンプルプログラムのColleagueButton、ColleagueTextField、ColleagueCheckboxを見てみると、これらのクラスはすべてmediatorというフィールドを持っている。また、setMediatorの内容も同じ。プログラムをシンプルするために、Colleagueインターフェイスの中にmediatorというフィールドを入れ、setMediatorを実装することはできるか。
+
+
+
+できない。
+インターフェイスはインスタンスフィールド(インスタンス変数)を持つことができず、また具象メソッド(抽象メソッドではないメソッド)を実装することもできないから。

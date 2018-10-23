@@ -1,0 +1,163 @@
+・selialization(直列化)の機能を使うと、作成したMementoのインスタンスをファイルとして保存することができる。
+以下の機能を満たすようにサンプルプログラムを変更
+(１)ファイルgame.datが存在しないときには、所持金100円からスタート
+(２)所持金がだいぶ増えたら、Mementoのインスタンスをファイルgame.datとして保存する。
+(３)プログラム起動時にファイルgame.datが存在したら、そのファイルに保存されている状態から開始する。
+
+
+
+■Mainクラス
+import game.Memento;
+import game.Gamer;
+import java.io.*;
+
+public class Main {
+    public static final String SAVEFILENAME = "game.dat";       
+    public static void main(String[] args) {
+        Gamer gamer = new Gamer(100);               // 最初の所持金は100
+        Memento memento = loadMemento();            // ファイルからロード   
+        if (memento != null) {
+            System.out.println("前回保存した結果からスタートします。");
+            gamer.restoreMemento(memento);
+        } else {
+            System.out.println("新規にスタートします。");
+            memento = gamer.createMemento();
+        }
+        for (int i = 0; i < 100; i++) {
+            System.out.println("==== " + i);        // 回数表示
+            System.out.println("現状:" + gamer);    // 現在の主人公の状態表示
+
+            gamer.bet();    // ゲームを進める
+
+            System.out.println("所持金は" + gamer.getMoney() + "円になりました。");
+
+            // Mementoの取り扱いの決定
+            if (gamer.getMoney() > memento.getMoney()) {
+                System.out.println("    （だいぶ増えたので、現在の状態を保存しておこう）");
+                memento = gamer.createMemento();
+                saveMemento(memento);   // ファイルに保存   
+            } else if (gamer.getMoney() < memento.getMoney() / 2) {
+                System.out.println("    （だいぶ減ったので、以前の状態に復帰しよう）");
+                gamer.restoreMemento(memento);
+            }
+
+            // 時間待ち
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+            }
+            System.out.println("");
+        }
+    }
+    public static void saveMemento(Memento memento) {   
+        try {
+            ObjectOutput out = new ObjectOutputStream(new FileOutputStream(SAVEFILENAME));
+            out.writeObject(memento);
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    public static Memento loadMemento() {               
+        Memento memento = null;
+        try {
+            ObjectInput in = new ObjectInputStream(new FileInputStream(SAVEFILENAME));
+            memento = (Memento)in.readObject();
+            in.close();
+        } catch (FileNotFoundException e) {
+            System.out.println(e.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return memento;
+    }
+}
+■Gamerクラス
+package game;
+import java.util.*;
+
+public class Gamer {
+    private int money;                          // 所持金
+    private List fruits = new ArrayList(); // フルーツ
+    private Random random = new Random();       // 乱数発生器
+    private static String[] fruitsname = {      // フルーツ名の表
+        "リンゴ", "ぶどう", "バナナ", "みかん",
+    };
+    public Gamer(int money) {                   // コンストラクタ
+        this.money = money;
+    }
+    public int getMoney() {                     // 現在の所持金を得る
+        return money;
+    }
+    public void bet() {                         // 賭ける…ゲームの進行
+        int dice = random.nextInt(6) + 1;           // サイコロを振る
+        if (dice == 1) {                            // 1の目…所持金が増える
+            money += 100;
+            System.out.println("所持金が増えました。");
+        } else if (dice == 2) {                     // 2の目…所持金が半分になる
+            money /= 2;
+            System.out.println("所持金が半分になりました。");
+        } else if (dice == 6) {                     // 6の目…フルーツをもらう
+            String f = getFruit();
+            System.out.println("フルーツ(" + f + ")をもらいました。");
+            fruits.add(f);
+        } else {                                    // それ以外…何も起きない
+            System.out.println("何も起こりませんでした。");
+        }
+    }
+    public Memento createMemento() {                // スナップショットをとる
+        Memento m = new Memento(money);
+        Iterator it = fruits.iterator();
+        while (it.hasNext()) {
+            String f = (String)it.next();
+            if (f.startsWith("おいしい")) {         // フルーツはおいしいものだけ保存
+                m.addFruit(f);
+            }
+        }
+        return m;
+    }
+    public void restoreMemento(Memento memento) {   // アンドゥを行う
+        this.money = memento.money;
+        this.fruits = memento.getFruits();
+    }
+    public String toString() {                      // 文字列表現
+        return "[money = " + money + ", fruits = " + fruits + "]";
+    }
+    private String getFruit() {                     // フルーツを1個得る
+        String prefix = "";
+        if (random.nextBoolean()) {
+            prefix = "おいしい";
+        }
+        return prefix + fruitsname[random.nextInt(fruitsname.length)];
+    }
+}
+■Mementoクラス
+package game;
+import java.io.*;
+import java.util.*;
+
+public class Memento implements Serializable {  
+    int money;                              // 所持金
+    ArrayList fruits;                          // フルーツ
+    public int getMoney() {                 // 所持金を得る(narrow interface)
+        return money;
+    }
+    Memento(int money) {                    // コンストラクタ(wide interface)
+        this.money = money;
+        this.fruits = new ArrayList();
+    }
+    void addFruit(String fruit) {           // フルーツを追加する(wide interface)
+        fruits.add(fruit);
+    }
+    List getFruits() {                    // フルーツを得る(wide interface)
+         return (List)fruits.clone();
+    }
+}
+※Mainクラスに以下のような修正を加えると、保存データを圧縮することができる。これは、保存するデータが大量になる場合に特に有効。
+(１)import java.util.zip.*;を追加する。
+(２)出力にDeflaterOutputStreamを含める
+ObjectOutput out = new ObjectOutputStream(new DeflaterOutputStream(new FileOutputStream(SAVEFILENAME)));
+(３)入力にInflaterInputStreamを含める
+ObjectInput in = new ObjectInputStream(new InflaterInputStream(new FileInputStream(SAVEFILENAME)));

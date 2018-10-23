@@ -1,0 +1,256 @@
+デザインパターン2(Adapterパターン、java.util.Propertiesクラス)
+・Adapterパターン
+
+
+
+■すでに提供されているものがそのまま使えないときに、必要な形に変換してから利用することがある。「すでに提供されているもの」と「必要なもの」の間の「ずれ」を埋めるようなデザインパターン。
+AdapterパターンはWrapperパターンと呼ばれることもある。普通の商品をきれいな包み紙で包んで、ギフト用品にするように何かをくるりと包んで別途の用途に使えるように変換してくれるもの、それがラッパー、アダプターということになる。
+
+・Adapterパターン 種類
+
+
+
+2種類
+・クラスによるAdapterパターン(継承を使ったもの)
+・インスタンスによるAdapterパターン(委譲を使ったもの)
+
+・Adapterパターン　サンプルプログラム(継承を使ったもの)【クラスによるAdapterパターン】
+Bannerクラスを使ってPrintインターフェイスを満たすようなクラスを作ること。交流100ボルト(ACアダプタ家庭用の電源として提供されている)を直流12ボルト(ノートパソコンが動くのに必要なボルト)に変換してくれるようなアダプターを作ること。
+※
+[m:459]あらかじめ提供されているもの＝直流100ボルト＝Bannerクラス
+[m:459]交換装置＝アダプター＝PrintBannerクラス
+[m:459]必要なもの＝直流12ボルト＝Printインターフェイス
+
+
+
+●Bannerクラス
+public class Banner {
+    private String string;
+    public Banner(String string) {
+        this.string = string;
+    }
+    public void showWithParen() {
+        System.out.println("(" + string + ")");
+    }
+    public void showWithAster() {
+        System.out.println("*" + string + "*");
+    }
+}
+●Printインターフェイス
+public interface Print {
+    public abstract void printWeak();
+    public abstract void printStrong();
+}
+●PrintBannerインターフェイス
+public class PrintBanner extends Banner implements Print {
+    public PrintBanner(String string) {
+        super(string);
+    }
+    public void printWeak() {
+        showWithParen();
+    }
+    public void printStrong() {
+        showWithAster();
+    }
+}
+●Mainクラス
+public class Main {
+    public static void main(String[] args) {
+        Print p = new PrintBanner("Hello");
+        p.printWeak();
+        p.printStrong();
+    }
+}
+実行結果
+(Hello)
+*Hello*
+※ここで、Mainクラスの中でPrintBannerのインスタンスをPrintインターフェイス型の変数に代入していることに注意。このMainクラスはあくまでPrintというインターフェイスを使ってプログラミングをしている。
+[m:459]BannerクラスやshowWithParenメソッド、showWithAsterメソッドは、Mainクラスのソースコード状からはすっかり隠されている。これはノートパソコンは直流12ボルトさえ提供してもらえば正しく動作し、それを支えているのが交流100ボルトなんて知らないことと似ている。
+
+・Adapterパターン　サンプルプログラム(委譲を使ったもの)
+
+
+
+委譲＝誰かにお任せするということ。
+Javaでの委譲は、あるメソッドの実際の処理を他のインスタンスのメソッドに任せてしまうこと。
+●Bannerクラス
+public class Banner {
+    private String string;
+    public Banner(String string) {
+        this.string = string;
+    }
+    public void showWithParen() {
+        System.out.println("(" + string + ")");
+    }
+    public void showWithAster() {
+        System.out.println("*" + string + "*");
+    }
+}
+●Printクラス
+public abstract class Print {
+    public abstract void printWeak();
+    public abstract void printStrong();
+}
+
+●PrintBannerクラス
+public class PrintBanner extends Print {
+    private Banner banner;
+    public PrintBanner(String string) {
+        this.banner = new Banner(string);
+    }
+    public void printWeak() {
+        banner.showWithParen();
+    }
+    public void printStrong() {
+        banner.showWithAster();
+    }
+}
+●Mainクラス
+public class Main {
+    public static void main(String[] args) {
+        Print p = new PrintBanner("Hello");
+        p.printWeak();
+        p.printStrong();
+    }
+}
+⇒先ほどの例では、自分のスーパークラスから継承したshowWithParen、showWithAsterメソッドを呼んでいたが、今度はフィールド経由で呼び出している。
+委譲＝PrintBannerクラスのprintWeakメソッドが呼ばれたとき、自分で処理をするのではなく、別のインスタンス(Bannerのインスタンス）のshowWithParenメソッドにお任せしている。
+
+・Adapterパターンの登場人物
+
+
+
+●Target(対象)の役
+いま必要となっているメソッドを定めている役。ノートパソコンを動かすための直流12ボルト。
+Printインターフェイス(継承の場合)やPrintクラス（委譲の場合）がこの役をつとめた。
+●Client(依頼者)の役
+Target役のメソッドを使って仕事をする約。直流12ボルトで動くノートパソコン。Mainクラスがこれに相当。
+●Adaptee(適合される)側の役
+Adapteeはすでに用意されているメソッドを持っている役。交流100ボルトのAC電源。Bannerクラスがこの役。
+●Adapterの役
+Adapterパターンの主人公。Adaptee役のメソッドを使ってなんとかTarget役を満たそうというのがAdapterパターンの目的であり、Adapter役のお仕事。交流100ボルトを直流12ボルトに変換するアダプタ―。PrintBannerクラスがこの役をつとめる。
+[m:459]クラスによるAdapterパターンの場合には、Adapter役は「継承」を使ってAdaptee役を利用する。
+[m:459]一方、インスタンスによるAdapterパターンの場合には、「委譲」を使って、Adaptee役を利用する。
+
+・どんな時にAdapterパターンを使うのか。
+
+
+
+■Adapterパターンは、既存のクラスに一皮かぶせて必要とするクラスを作る。
+このパターンによって、必要となるメソッド群をすばやく作ることができる。もしバグが出たとしても、既存のクラス(Adaptee役)にはバグがないことが分かっているのでAdapte役のクラスを重点的に調べればよいということになり、プログラムのチェックが楽になる。
+■Adapterパターンは、既存のクラスに全く手を加えずに、目的のインターフェイス(API)に合わせようとするもの。また、Adapterパターンでは、既存のクラスのソースプログラムは必ずしも必要ではない。既存のクラスの仕様だけわかれば、新しいクラスを作ることができる。
+
+・サンプルプログラムではPrintBannerクラスのインスタンスを作るときに、次のようにPrint型の変数に代入している。
+Print p = new PrintBanner("Hello");
+なぜ
+PrintBanner p = new PrintBanner("Hello");
+にしないのか。
+
+
+
+■「Printインターフェイスのメソッドだけを用いる」という点を強調したかったから。このサンプルプログラムでは、PrintBannerクラスとPrintインターフェイスが提供しているメソッドは同じ。しかし、場合によってはPrintBannerクラスの方が多くのメソッドを持っているかもしれない。
+Print型の変数に代入してそれを使うことで、「PrintBannerクラスのメソッドを利用しているのではなく、Printインターフェイスのメソッドを利用しているのだ」というプログラムの意図がはっきるするため。
+
+・java.util.Propertiesクラス
+
+
+
+day=20
+year=2000
+month=11
+のようなキーとその値の組(プロパティ)を管理するためのもの。
+
+・sampleprop.propertiesを読み取ってキー値をコンソールに出力
+中身
+mykey=abcdefg
+mykey2=tanaka
+
+
+
+■public static void main(String[] args) {
+		final Properties prop = new Properties();
+		InputStream inStream = null;
+		String proPass = "C:\\pleiades\\workspace\\Desighpattrn\\src\\rensyuu3\\sampleprop.properties";
+		try {
+			inStream = new BufferedInputStream(
+					new FileInputStream(proPass));
+			prop.load(inStream);
+			final String value = prop.getProperty("mykey2");
+			System.out.println(value);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (inStream != null) {
+					inStream.close();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+・app2.propertiesファイルに対して下記の書き込み
+#store test
+#Mon Nov 28 23:06:44 JST 2011
+age=33
+
+
+
+■public static void main(String[] args) throws IOException {
+	Properties props = new Properties();
+	props.setProperty("age", "33");
+
+	FileOutputStream fos = new FileOutputStream(new File("app2.properties"));
+	props.store(fos, "store test"); // 書き込み
+	fos.close();
+    }
+
+・adapterパターンを使用してプロパティの集合をファイルに保存する
+FilePropertiesクラスを新規作成
+●FileIOインターフェイス
+public interface FileIO {
+    public void readFromFile(String filename) throws IOException;
+    public void writeToFile(String filename) throws IOException;
+    public void setValue(String key, String value);
+    public String getValue(String key);
+}
+●Mainクラス
+public class Main {
+    public static void main(String[] args) {
+        FileIO f = new FileProperties();
+        try {
+            f.readFromFile("file.txt");
+            f.setValue("year", "2004");
+            f.setValue("month", "4");
+            f.setValue("day", "21");
+            f.writeToFile("newfile.txt");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+
+
+■public class FileProperties extends Properties implements FileIO {
+    public void readFromFile(String filename) throws IOException {
+        load(new FileInputStream(filename));
+    }
+    public void writeToFile(String filename) throws IOException {
+        store(new FileOutputStream(filename), "written by FileProperties");
+    }
+    public void setValue(String key, String value) {
+        setProperty(key, value);
+    }
+    public String getValue(String key) {
+        return getProperty(key, "");
+    }
+}
+出力結果
+#written by FileProperties
+#Mon Nov 20 10:27:07 JST 2000
+day=20
+year=2000
+month=11

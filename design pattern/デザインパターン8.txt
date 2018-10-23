@@ -1,0 +1,250 @@
+・Compositeパターン
+
+
+
+コンポジットパターン
+■ディレクトリとファイルは異なるものだが、このどちらも「ディレクトリの中に入れることができるもの」。ディレクトリとファイルをまとめて「ディレクトリエントリというもの」と呼ぶこともある。ディレクトリエントリという名前によって、ディレクトリとファイルをを同じ種類のものと見なしている(同一視している)。
+ディレクトリとファイルをまとめてディレクトリエントリとして扱うように容器と中身を同じ種類のものとして扱うと便利な場合がある。容器の中には、中身を入れてもいいし、さらに小さな容器を入れることができる。そして、その小さな容器の中にもっと小さな容器を入れて・・・こんな風にして、入れ子になった構造、再帰的な構造作ることができる。
+このような構造のパターン。
+容器と中身を同一視し、再帰的な構造を作るデザインパターン。
+
+・サンプルプログラムとして、ファイルとディレクトリを模式的に表現したプログラム
+ファイルを表すクラスがFileクラス、ディレクトリを表すクラスがDirectoryクラスで両者を取りまとめる形で、スーパークラスのEntryクラスがある。Entryクラスはディレクトリエントリを表すクラスで、FileとDirectoryを同一視するクラス。
+
+■Fileクラスの
+ protected void printList(String prefix) {
+        System.out.println(prefix + "/" + this);
+    }
+⇒ここで、"/" + thisという演算をしているが、このように文字列とオブジェクトを加えると自動的にそのオブジェクトがtoStringメソッドが呼び出される。これはJava言語の仕様。つまり以下の式はすべて同じ。
+prefix + "/" + this
+prefix + "/" + this.toString()
+prefix + "/" + toString()
+■Directoryクラスの
+size += entry.getSize();
+⇒このentryはFileのインスタンスかもしれないし、Directoryクラスのインスタンスかもしれない。どちらの場合でも、同じメソッドgetSizeでサイズを得ることができている。これがCompositeパターンの特徴、「容器と中身を同じものと見なす」ことの現れ。
+Entryのサブクラスとして別のクラスが将来作られたとしても、それもgetSizeメソッドを実装しているのでDirectoryクラスのこの部分を修正する必要はない。
+entryがDirectoryのインスタンスの場合、entry.getSize()という式を評価すると、ディレクトリの中のエントリのサイズを1個1個加える。また、その中にディレクトリがあったら、さらにサブディレクトリのgetSizeを呼び出し・・と、再帰的にメソッドgetSizeが呼び出されることになる。Compositeパターンの再帰的構造が、そのままgetSizeというメソッドの再帰的呼び出しに対応していることが分かる。
+printListメソッドはディレクトリの一覧を表示するもの。printListメソッドもprintListを再帰的に呼び出している。その際に、変数entryがFileのインスタンスなのかDirectoryのインスタンスなのかを調べないというのもgetSizeメソッドの時と同様。容器と中身が同一視されているから。
+
+■Entry.java
+public abstract class Entry {
+    public abstract String getName();                               // 名前を得る
+    public abstract int getSize();                                  // サイズを得る
+    public Entry add(Entry entry) throws FileTreatmentException {   // エントリを追加する
+        throw new FileTreatmentException();
+    }
+    public void printList() {                                       // 一覧を表示する
+        printList("");
+    }
+    protected abstract void printList(String prefix);               // prefixを前につけて一覧を表示する
+    public String toString() {                                      // 文字列表現
+        return getName() + " (" + getSize() + ")";
+    }
+}
+■File.java
+public class File extends Entry {
+    private String name;
+    private int size;
+    public File(String name, int size) {
+        this.name = name;
+        this.size = size;
+    }
+    public String getName() {
+        return name;
+    }
+    public int getSize() {
+        return size;
+    }
+    protected void printList(String prefix) {
+        System.out.println(prefix + "/" + this);
+    }
+}
+■Directory.java
+import java.util.Iterator;
+import java.util.ArrayList;
+
+public class Directory extends Entry {
+    private String name;                    // ディレクトリの名前
+    private ArrayList directory = new ArrayList();      // ディレクトリエントリの集合
+    public Directory(String name) {         // コンストラクタ
+        this.name = name;
+    }
+    public String getName() {               // 名前を得る
+        return name;
+    }
+    public int getSize() {                  // サイズを得る
+        int size = 0;
+        Iterator it = directory.iterator();
+        while (it.hasNext()) {
+            Entry entry = (Entry)it.next();
+            size += entry.getSize();
+        }
+        return size;
+    }
+    public Entry add(Entry entry) {         // エントリの追加
+        directory.add(entry);
+        return this;
+    }
+    protected void printList(String prefix) {       // エントリの一覧
+        System.out.println(prefix + "/" + this);
+        Iterator it = directory.iterator();
+        while (it.hasNext()) {
+            Entry entry = (Entry)it.next();
+            entry.printList(prefix + "/" + name);
+        }
+    }
+}
+■FileTreatmentException
+public class FileTreatmentException extends RuntimeException {      // RuntimeExceptionで正しいか？
+    public FileTreatmentException() {
+    }
+    public FileTreatmentException(String msg) {
+        super(msg);
+    }
+}
+■Main.java
+public class Main {
+    public static void main(String[] args) {
+        try {
+            System.out.println("Making root entries...");
+            Directory rootdir = new Directory("root");
+            Directory bindir = new Directory("bin");
+            Directory tmpdir = new Directory("tmp");
+            Directory usrdir = new Directory("usr");
+            rootdir.add(bindir);
+            rootdir.add(tmpdir);
+            rootdir.add(usrdir);
+            bindir.add(new File("vi", 10000));
+            bindir.add(new File("latex", 20000));
+            rootdir.printList();
+
+            System.out.println("");
+            System.out.println("Making user entries...");
+            Directory yuki = new Directory("yuki");
+            Directory hanako = new Directory("hanako");
+            Directory tomura = new Directory("tomura");
+            usrdir.add(yuki);
+            usrdir.add(hanako);
+            usrdir.add(tomura);
+            yuki.add(new File("diary.html", 100));
+            yuki.add(new File("Composite.java", 200));
+            hanako.add(new File("memo.tex", 300));
+            tomura.add(new File("game.doc", 400));
+            tomura.add(new File("junk.mail", 500));
+            rootdir.printList();
+        } catch (FileTreatmentException e) {
+            e.printStackTrace();
+        }
+    }
+}
+実行結果
+Making root entries...
+/root (30000)
+/root/bin (30000)
+/root/bin/vi (10000)
+/root/bin/latex (20000)
+/root/tmp (0)
+/root/usr (0)
+
+Making user entries...
+/root (31500)
+/root/bin (30000)
+/root/bin/vi (10000)
+/root/bin/latex (20000)
+/root/tmp (0)
+Making user entries...
+/root (31500)
+/root/bin (30000)
+/root/bin/vi (10000)
+/root/bin/latex (20000)
+/root/tmp (0)
+/root/usr (1500)
+/root/usr/yuki (300)
+/root/usr/yuki/diary.html (100)
+/root/usr/yuki/Composite.java (200)
+/root/usr/hanako (300)
+/root/usr/hanako/memo.tex (300)
+/root/usr/tomura (900)
+/root/usr/tomura/game.doc (400)
+/root/usr/tomura/junk.mail (500)
+
+・Compositeパターンの登場人物
+
+
+
+■Leaf(葉)の役
+「中身を表す役」。この役の中には、他のものをいれることはできない。Fileクラスがこの役をつとめる。
+■Composite(複合体)の役
+「容器」を表す役。Leaf役やComposite役を入れることができる。Directoryクラスがこの役。
+getChildメソッド持つ。
+■Component役
+Leafの役とComposite役を同一視するための役。Component役は、Leaf役とComposite役に共通のスーパークラスとして実現する。Entryクラスがこの役。
+getChildメソッドはComponent役から「子供」を得るメソッド。(getChildメソッド持つ)
+■Client(依頼者)の役
+Compositeパターンの利用者。Mainクラスがこの役
+
+・addはどこに置くべきか
+
+
+
+Entryクラスでaddメソッドを定義し、そこでは例外を投げた。
+addメソッドが実際使えるのはDirectoryクラスだけ。addの置き方、実装の仕方にはいろいろな方法がある。
+◆場合1:Entryクラスに実装し、エラーにする。
+サンプルプログラムのやり方。addメソッドが実際に使えるDirectoryクラスでは、Entryクラスのaddをオーバーライドして、意味のある実装に置き替えている。
+FileクラスはEntryクラスからaddメソッドを継承しているのでaddは可能だが、例外が投げられる。
+◆場合2:Entryクラスに実装し、何も行わない
+addメソッドはEntryクラスで実装するが、エラーにしない。(何も実行しない)という手もある。
+◆場合3:Entryクラスで宣言はするが、実装はしない
+addメソッドをEntryクラスでは抽象メソッドとし、サブクラスではなら定義し、不要ならエラーにする、という手もある。この方法なら統一が取れるし、不要な場合の振る舞いをサブクラスで決定できるという利点がある。ただし、本来不要なadd(場合によってはremoveやgetChildなど)をFile側で定義する必要が出てきてしまう。
+◆場合4:Directoryクラスだけに入れる
+addメソッドをEntryクラスに入れず、本当に必要なDirectoryクラスではじめて入れるというやり方もある。ただし、このやり方だと、Entry型の変数(実際の内容はDirectoryクラスのインスタンス)にaddするときに、いちいちDirectory型にキャストする必要が生じる。
+
+・ArrayListの中味を順番に取り出す。(拡張For文以外)
+
+
+
+ArrayList directory = new ArrayList();
+	directory.add("aaa.html");
+	directory.add("bbb.html");
+	directory.add("ccc.html");
+	directory.add("ddd.html");
+	Iterator it = directory.iterator();
+	while (it.hasNext()) {
+		String Mojiretsu = (String)it.next();
+		System.out.println(Mojiretsu);
+	}
+実行結果
+aaa.html
+bbb.html
+ccc.html
+ddd.html
+
+・Compositeパターン　ほかの例
+
+
+
+一般的に、木構造になるデータ構造はCompositeパターンに当てはまる。
+■例えば、プログラムの動作テストを考えてみる。TEST1ではキーボードからの入力テストを行い、TEST2ではファイルからの入力テストを行い、TEST3ではネットワークからの入力テストそ行ったとする。TEST1、TEST2、TEST3の3つをまとめて「入力テスト」とする。
+複数のテストを集めて「入力テスト」とし、また別のテストを集めて「出力テスト」とし、さらに両者をまとめて「入出力テスト」とする。
+■ウインドウシステムではウインドウの中の子ウインドウを持たせる。
+
+・
+■Rensyuu2クラス
+public class Rensyuu2 {
+
+	public static void main(String[] args) {
+		Entity entity = new Entity();
+		Entity entity2 = entity.tamesi();
+		System.out.println(entity2.name);
+	}
+}
+■Entityクラス
+public class Entity {
+
+	public String name;
+	public Entity tamesi(){
+		Entity entity = this;
+		entity.name="aaa";
+		return entity;
+	}
+}

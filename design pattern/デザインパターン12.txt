@@ -1,0 +1,154 @@
+デザインパターン12(Facedeパターン)
+○Facedeパターン
+
+
+
+■大きなプログラムを使って処理を行うためには、関係しあっているたくさんのクラスを適切に制御しなければならない。だとすると、その処理を行うための「窓口」を用意しておくのがよい。
+そうすれば、たくさんのクラスを個別に制御しなくても、その「要求」に対して、要求を出すだけで仕事がすむから。そのような窓口が「Facedeパターン」
+Facedeはフランス語で「建物の正面」という意味
+Facedeパターンは、複雑に絡み合ってごちゃごちゃした詳細をまとめ、高レベルのインターフェイス(API)を提供する。
+■Facede役は、システムの外側に対してはシンプルなインターフェイス(API)を見せる。また、Facede役はシステムの内側にある各クラスの役割や依存関係を考えて、正しい順番でクラスを利用する。
+
+○ユーザーのWebページを作成する例
+こんぼシステムは、メールアドレスから名前を得るデータベース(Database)、HTMLファイルを作成するクラス(HtmlWriter)、Facede役として高レベルのインターフェイス(API)を提供するクラス(PageMaker)で構成されている。
+■Mainクラス
+package facedeMain;
+import pagemaker.PageMaker;
+
+public class Main {
+    public static void main(String[] args) {
+        PageMaker.makeWelcomePage("hyuki@hyuki.com", "welcome.html");
+    }
+}
+■Databaseクラス
+package pagemaker;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
+
+public class Database {
+    private Database() {    // newでインスタンス生成させないためにprivate宣言
+    }
+    public static Properties getProperties(String dbname) { // データベース名からPropertiesを得る
+        String filename = dbname + ".txt";
+        Properties prop = new Properties();
+        try {
+            prop.load(new FileInputStream(filename));
+        } catch (IOException e) {
+            System.out.println("Warning: " + filename + " is not found.");
+        }
+        return prop;
+    }
+}
+■HtmlWriterクラス
+package pagemaker;
+
+import java.io.IOException;
+import java.io.Writer;
+
+public class HtmlWriter {
+    private Writer writer;
+    public HtmlWriter(Writer writer) {  // コンストラクタ
+        this.writer = writer;
+    }
+    public void title(String title) throws IOException {    // タイトルの出力
+        writer.write("<html>");
+        writer.write("<head>");
+        writer.write("<title>" + title + "</title>");
+        writer.write("</head>");
+        writer.write("<body>\n");
+        writer.write("<h1>" + title + "</h1>\n");
+    }
+    public void paragraph(String msg) throws IOException {  // 段落の出力
+        writer.write("<p>" + msg + "</p>\n");
+    }
+    public void link(String href, String caption) throws IOException {  // リンクの出力
+        paragraph("<a href=\"" + href + "\">" + caption + "</a>");
+    }
+    public void mailto(String mailaddr, String username) throws IOException {   // メールアドレスの出力
+        link("mailto:" + mailaddr, username);
+    }
+    public void close() throws IOException {    // 閉じる
+        writer.write("</body>");
+        writer.write("</html>\n");
+        writer.close();
+    }
+}
+■PageMakerクラス
+package pagemaker;
+
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Properties;
+
+public class PageMaker {
+    private PageMaker() {   // インスタンスは作らないのでprivate宣言する
+    }
+    public static void makeWelcomePage(String mailaddr, String filename) {
+        try {
+            Properties mailprop = Database.getProperties("C:\\pleiades\\workspace\\Desighpattrn\\src\\pagemaker\\maildata");
+            String username = mailprop.getProperty(mailaddr);
+            HtmlWriter writer = new HtmlWriter(new FileWriter(filename));
+            writer.title("Welcome to " + username + "'s page!");
+            writer.paragraph(username + "のページへようこそ。");
+            writer.paragraph("メールまっていますね。");
+            writer.mailto(mailaddr, username);
+            writer.close();
+            System.out.println(filename + " is created for " + mailaddr + " (" + username + ")");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+※外部に対してはたった一つのmakeWelcomePageメソッドだけをみせている。ここがシンプルな窓口。
+■maildata.txt(C:\pleiades\workspace\Desighpattrn\src\pagemaker\maildata.txt)
+hyuki@hyuki.com=Hiroshi Yuki
+hanako@hyuki.com=Hanako Sato
+tomura@hyuki.com=Tomura
+mamoru@hyuki.com=Mamoru Takahashi
+実行結果
+C:\pleiades\workspace\Desighpattrn
+welcome.html
+が作られている。
+
+○Facedeパターンの登場人物
+
+
+
+■Facede(正面)の役
+Facede役は、システムを構成しているその他おおぜいの役の「シンプルな窓口」となる。Facede役は、高レベルでシンプルなインターフェイス(API)をシステム外部に提供する。PageMakerクラスがこの役
+■システムを構成しているその他おおぜいの役
+その他おおぜいの役は、それぞれの仕事を行うがFacede役のことを意識しない。Facede役から呼ばれて仕事を行うが、その他おおぜいの役の方からFacede役を呼び出すことはない。
+サンプルプログラムでは、HtmlWriterクラスとDatabaseクラスがこの役
+■Client(依頼人)役
+Facedeパターンを利用する役。Mainクラスがこの役
+
+○Facede役やっていること
+
+
+
+■Facede役は複雑なものを単純に見せている。その「複雑なもの」は裏方で働いているたくさんのクラスの関係や使い方が複雑。Facede役はその複雑さを意識しないですむように気を使う。
+ここでのポイントはAPI(インターフェイス)を少なくすること。クラスやメソッドがたくさん見えていると、プログラマはどれを使っていいか迷うし、また呼び出しの順番にも注意しなければならない。注意しなければならないということは、間違えすいということ。API(インターフェイス)が少ないFacede役を考えるのがいい。
+■API(インターフェイス)数が少ないということは、外部との結合が疎であるとも表現できる。
+外部との疎な結合、細い結合、ゆるやかな結合は、パッケージ(クラスの集合)を部品として再利用しやすくしてくれる。
+
+○再帰的なFacedeパターンの適用
+
+
+
+■Facede役を持ったクラスの集合が複数個あったとする。そのとき、それらの集合をまとめた新たなFacede役を導入することもできる。つまり、Facedeパターンを再帰的に利用する。
+非常に大きなシステムが、多数のクラス・多数のパッケージを抱えるとき、要所要所にFacedeパターンを適用すると、システムはより便利になる。
+
+○将来の拡張やプログラムの改善に備えて、pagemakerパッケージの外から利用できるのはPageMakerクラスだけにしたい、とクラス設計者は考えた。DatabaseクラスとHtmlWriterクラスをpagemakerパッケージの外から利用できないようにするには、サンプルプログラムをどのように変更したらいいか。
+
+
+
+■DatabaseクラスとHtmlWriterクラスの定義をpublicなしにする。
+これで、DatabaseクラスとHtmlWriterクラスの名前はpagemakerパッケージの外から参照できなくなる。
+例
+class Database｛
+～
+class HtmlWriter｛
+～
+※メソッドについているpublicは削除しなくて構わない。
