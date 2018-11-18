@@ -1,0 +1,535 @@
+■ララベルだとvue.jsなどの最新のフレームワークと相性が良い
+■PHPにもオブジェクト指向、シングルトンや抽象クラスなどの考えはある。
+
+・XAMPP
+
+
+
+最も人気のある PHP 開発環境です
+XAMPP は、完全に無償で MariaDB、PHP、および Perl を含んだ、簡単にインストールできる Apache ディストリビューションです。
+
+・インストールの注意点
+
+
+
+https://www.apachefriends.org/jp/index.html
+トップページのWindows向けをクリックしてインストール
+⇒
+Select the conponentsで
+FileZilla FTP Server
+Mercury Mail Server
+Tomcat
+Perl
+Webalizer
+Fake Sendmail
+はチェックを外してもよい
+⇒
+インストール時のフォルダは
+C:\Program Files以外にすること。そうでないと動作しないことがあるため
+例
+C:\xampp
+
+・18:55:42 [mysql] Port 3306 in use by "Unable to open process"!
+18:55:42 [mysql] MySQL WILL NOT start without the configured ports free!
+18:55:42 [mysql] You need to uninstall/disable/reconfigure the blocking application
+18:55:42 [mysql] or reconfigure MySQL and the Control Panel to listen on a different port
+https://qiita.com/kyorochan0219/items/01fafab61fc66aef86f8
+というエラーが出た場合
+
+
+
+https://www.youtube.com/watch?v=gVWVTsTPxRk
+■XAMPPのMySqlの行のconfigボタンを押すとmy.iniファイルが開くので
+3306を3307に全て変える。
+その後、XAMPPのConfigボタンを押してService and Port Settingsを押す
+MySQLボタンを押して3306を3307に変更して保存。
+XAMPP Controll Panelを閉じて開きなおすとエラー解決
+
+・XAMPP Controll Panelでは様々なソフトを起動できる
+
+
+
+■ApacheやMySQLなど
+Startボタンを押すだけで起動できる。
+背景が緑色になったら正しく動作していることを表す。
+赤や黄色など出てしまった場合の原因の大半は他のソフトとポートがぶつかっているから
+⇒
+Apacheではデフォルトで80が設定されているので80はぶつかりやすいので
+XAMPPのConfigボタンを押してService and Port Settingsを押して
+8888に切り替える。
+そして、XAMPPのConfigボタンを押してApache(httpd.conf)をクリック
+Apacheの様々な設定が書かれているメモ帳が表示されるがポートの80という
+数字が書き込まれているので8888に直していく。
+その後、startボタン押してApacheを起動するとportが8888と表示され、
+正しく起動できる。
+※インストール時にApacheにチェックを入れてなかっても起動はできる
+
+・XAMPP Controll PanelのApacheのAdminを押すと
+
+
+
+■Webページが表示される。
+ApacheがWebサーバーとなり、Webページを配信しているということ
+⇒
+http://localhost:8888/dashboard/
+
+・PHPの学習をするときは
+
+
+
+XAMPP Controll Panelを開いてApacheとMySQLを起動すること
+
+・作業ディレクトリについて
+
+
+
+■XAMPP Controll PanelのExplorerボタンをクリックして
+C:\xampp\htdocs　※htdocsはApacheが見ているもの
+に新しいフォルダを作る
+一旦
+phpという名前にする。
+そのフォルダに講座のcssフォルダとindex.phpを中に入れる。
+C:\xampp\htdocs\php
+が作業ディレクトリ
+⇒
+Visual Studio Code(テキストエディタ)をインストールしていると作業ディレクトリで右クリックすると
+Open With Codeというタブが出てくる。
+クリックすると
+Visual Studio Codeのなかで作業ディレクトリが表示される。
+ファイルボタンで手軽にファイルを作ることが出来、sample01.phpファイルを作ってみる。
+index.phpの中身をコピーしsample01.phpの中へ張り付ける。
+preタグがPHPのコードを記載する個所
+例
+<pre>
+<!-- ここにプログラムを記述します -->
+<?php
+print('PHPを勉強中です!');
+?>
+</pre>
+
+http://localhost:8888/php/sample01.php
+で画面表示
+
+・print("sssPHPを勉強中です!");
+
+
+
+⇒ダブルクォーテーションでも問題ない。
+
+・シングルとダブルを入れ混ぜて表示
+
+
+
+print("I'm studying");
+
+・エスケープシーケンス
+
+
+
+■逃げる並び
+⇒文字列の並びからその文字を逃がすという意味
+例
+print("I'm studying \"PHP\"");
+※I'm studying "PHP"
+と表示される
+
+・PHPの約束事
+
+
+
+プログラムの前後には必ず
+大なり記号(<)、?php～?小なり記号(>)
+といった記号を書く
+
+・print
+ファンクション(関数)
+
+
+
+画面の文字を表示する
+
+・PHPのオフィシャルサイト
+
+
+
+http://www.php.net/
+⇒
+検索のテキストボックスにprint
+で検索書けると説明が出てくる。
+※説明は日本語でも表示できる
+
+・現在の秒を表示する
+
+
+
+print(date('s'));
+⇒
+パラメタにはアルファベット以外でも表示できる。
+例
+print(date('s秒'));
+
+・現在の曜日を表示する
+
+
+
+print(date('l'));
+
+・現在の何時何分何秒を表示
+
+
+
+■print(date('G時 i分 s秒'));
+※今は12時だが画面には4時と表示されてしまっている。
+⇒
+日本の場合、世界標準時から9時間ずれている。日本のタイムゾーン
+を使っていない。
+XAMPPの設定を行わないといけない
+⇒
+Controll PanelのConfigボタンをクリック
+⇒
+PHP(php.ini)の中の
+[Date]
+date.timezone=Europe/Berlin
+がタイムゾーンの設定
+⇒
+[Date]
+date.timezone=Asia/Tokyoに変更
+※参考
+ネットで「PHP タイムゾーンリスト」と検索すると
+http://php.net/manual/ja/timezones.php
+世界中のタイムゾーンのリストがある。Asia/Tokyoある。
+⇒
+変更後はApacheを再起動しないといけないので
+Controll PanelでStopを押してからスタートを押す
+※レンタルサーバーを使っていてでタイムゾーンが変更できない場合には
+プログラムでタイムゾーンを指定することもできる。
+例
+<?php
+date_default_timezone_set('Asia/Tokyo');
+print(date('G時 i分 s秒'));
+?>
+
+・「現在は何時何分何秒です」と表示
+
+
+
+■print('現在');
+print(date('G時 i分 s秒'));
+print('です');
+とでもできるが効率は悪い
+⇒
+<?php
+print('現在' . date('G時 i分 s秒') . 'です');
+?>
+といった形で1行におさめる
+※.(ドット)が文字列結合
+
+・オブジェクトを使って、時刻を表示する。
+
+
+
+■<?php
+$today = new DateTime();
+print($today->format('G時 i分 s秒'));
+?>
+※formatは時刻をフォーマットに従って整形する。
+「$today->format」はDateTimeのインスタンスのメソッドを使っているという意味
+ハイフン小なり記号
+※PHPはオブジェクト指向言語と従来の手続き型言語の書き方が混在している状況。
+どちらを使っていけばいいのかはその時その時で変わってくるのでまずは両方の使い方を覚えて
+迷ったときはオブジェクト指向を使う。後々、様々なプログラムに応用ができるため。
+
+・合計金額は：1850円です。
+税込み価格は：1998円です。
+変数を使用
+
+
+
+<pre>
+<?php $sum = 100+1050+200+500; ?>
+合計金額は：<?php print($sum); ?>円です。
+税込み価格は：<?php print($sum*1.08); ?>円です。
+</pre>
+※変数名は最初がドルである必要がある。
+
+・PHPの変数の注意点
+
+
+
+■変数をダブルクォーテーションで囲った場合は、変数の中身が表示されるので注意
+例
+<?php $sum = 100+1050+200+500; ?>
+合計金額は：<?php print("$sum"); ?>円です。
+⇒
+結果
+合計金額は：1850円です
+
+・変数を使うメリット
+
+
+
+■同じ計算式などを使うときに分かりやすくなる。
+■計算式が何を意味するのから分かりやすくなる
+例
+<pre>
+<?php $sum = 100+1050+200+500; ?>
+<?php $tax = 1.08; ?>
+合計金額は：<?php print("$sum"); ?>円です。
+税込み価格は：<?php print($sum*$tax); ?>円です。
+</pre>
+
+・
+1
+2
+と表示
+
+
+
+<pre>
+<?php 
+$i = 1;
+print($i . "\n");
+
+$i = $i + 1;
+print($i . "\n");
+?>
+</pre>
+
+・1~365を縦に表示
+
+
+
+<?php 
+$i = 1;
+
+while ($i <= 365){
+    print($i . "\n");
+    $i = $i + 1; // $i += 1と同じ、$i++と同じ
+}
+?>
+</pre>
+※for文に書き換え
+for ($i = 1; $i<=365; $i++){ //$i++の部分は更新処理
+    print($i . "\n");
+}
+⇒for文の方がコードが短くなっている
+while文で前後に書いていた処理などをfor構文では一か所にまとめることが出来る
+
+・for文
+while文
+
+
+
+単純に何回繰り返したいという処理であったり、同じ変数を使いながら様々な計算を行いながら簡単な繰り返しであればfor文を使用。
+プログラムによっては初期化処理や更新処理が複雑になったりしているケースがある。無理にfor文を使おうとするとfor文が複雑になってプログラムを見ても一見何をしているのか分からなくなってしまう。そのような場合はwhile文を使った方がシンプルになる。
+使い分けが難しいと感じたらwhile文を使えばどんなプログラミングも作ることが出来る。
+
+・実行する日付を基準にそれから1年後の日付までを表示する。
+例
+6/6(Wed)
+6/7(Thu)
+～
+※各月の末日も正しく表示されるように。
+
+
+
+■print(date('n/j(D)'));で
+11/18(Sun)と表示
+⇒
+■print(time());
+タイムスタンプを返す。
+★実行結果
+1542521661は
+1970年1月1日から現在の日付までを秒で数えていった数字
+※1970年はコンピューターが計算しやすい年として定めたもの
+■現在の日付から一日後
+<?php 
+print(date('n/j(D)', time() + 60 * 60 * 24));
+?>
+60秒×60分×24時間
+※24時間分の秒数を足してあげる。
+■strtotimeファンクション
+※strはstringのこと。
+文字列にしたものをタイムスタンプに変換するというもの
+例
+strtotime('1543/1/31')
+とするとそのタイムスタンプを取得できる
+例
+strtotime('+2day')
+今日から2日後のタイムスタンプを得る
+⇒
+print(date('n/j(D)', strtotime('+2day')));
+※11/20(Tue)と表示
+⇒
+<?php 
+for ($i=1; $i<=365; $i++){
+    $date = strtotime('+' . $i . 'day');
+    print(date('n/j(D)',$date));
+    print "\n";
+}
+?>
+※HTMLを工夫すればカレンダーのようなものも作ることが出来る
+
+・for文の書き方　別途
+
+
+
+for ($i=1; $i<=365; $i++): //中かっこでなくコロンを書く
+    $date = strtotime('+' . $i . 'day');
+    print(date('n/j(D)',$date));
+    print "\n";
+endfor; //セミコロン
+※こっちの書き方の方が何に対する閉じなのかというのが非常にわかりやすくなる。
+よく使われる書き方
+
+・while文の書き方　別途
+
+
+
+while(....):
+ ~~~~~
+endwhile;
+※よく使われる書き方
+
+・上記のプログラムで曜日を日本語で表示するようにしたい。
+
+
+
+配列を使う。
+$week_name = ['日','月','火','水','木','金','土']; // ブラケットという記号を使った配列。最近のPHPでしか動作しない書き方
+$week_name = array('日','月','火','水','木','金','土'); //古い書き方
+print(date('w')); //4は木曜日を意味する数字。0は日曜日。wは数字で曜日を知る
+⇒
+$week_name = ['日','月','火','水','木','金','土'];
+print($week_name[date('w')]); //今日の曜日が表示。曜日を配列で管理。北海道から順番に入れたりなど配列の利用範囲はかなり広い
+
+・連想配列
+
+
+
+要素を指定する前にキーを指定する。
+例
+<pre>
+<?php 
+$fruits = [
+    'apple'=>'りんご',
+    'grape'=>'ぶどう',
+    'lemon'=>'レモン'
+];
+print($fruits['grape']);
+?>
+</pre>
+※appleがインデックスとなり、リンゴが値になる。
+順番が関係ないものを配列にしたい場合はindexを自分で自由に決めることが出来る。
+
+・連想配列を繰り返しで表示したい
+
+
+
+foreach
+※配列専用の構文
+⇒
+foreachの中に配列を記述して受けとる変数を記述する。
+例
+<pre>
+<?php 
+$fruits = [
+    'apple'=>'りんご',
+    'grape'=>'ぶどう',
+    'lemon'=>'レモン'
+];
+
+foreach($fruits as $val)
+print($val . "\n");
+?>
+</pre>
+実行結果
+りんご
+ぶどう
+レモン
+
+・連想配列でキーと値を表示
+
+
+
+<pre>
+<?php 
+$fruits = [
+    'apple'=>'りんご',
+    'grape'=>'ぶどう',
+    'lemon'=>'レモン'
+];
+
+foreach($fruits as $english => $japanese) //$englishにはインデックスが入り、$japaneseの値が入る。
+print($english . ':' . $japanese . "\n");
+?>
+</pre>
+⇒
+実行結果
+apple:りんご
+grape:ぶどう
+lemon:レモン
+
+・9時に開店するお店の場合、9時以前の時には「現在受付時間外です」とメッセージ表示
+
+
+
+<pre>
+<?php 
+print(date('G'));
+
+if(date('G') < 9){ // date('G')は現在の時間を返す。17時なら17が返ってくる
+    print('※ 現在受付時間外です');
+}
+?>
+</pre>
+
+・$x = ''; // true /false
+if(!$x){
+    print('xには文字が入っています');
+}
+
+
+・$x = 0; // 0=false, 0以外=true
+if(!$x){
+    print('xは0ではありません');
+}
+
+・<pre>
+3,000円のものから、100円値引きした場合は,
+<?php print (floor(100 / 3000 * 100));?>%引きです。
+</pre>
+
+
+
+floorは床という意味。
+その通り下に合わせる。
+小数が発生してもその小数は切り捨てる。
+
+・
+<pre>
+3,000円のものから、100円値引きした場合は,
+<?php print (ceil(100 / 3000 * 100));?>%引きです。
+</pre>
+
+
+
+ceil
+天井
+上に合わせるという意味。
+3.333から切り上げたので
+結果は4
+
+・四捨五入
+
+
+
+■
+<pre>
+四捨五入
+<?php print (round(100 / 3000 * 100, 1));?>
+</pre>
+⇒
+roundの場合は1つパラメタが増えるので注意。
+小数点第2位が3.33なので切り捨てられて3.3になる。
+※2つ目のパラメタの1は小数点の第何位まで表示するか
