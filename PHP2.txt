@@ -1,0 +1,394 @@
+・日付など桁数を合わせて表示したい
+月と日が2桁になるように表示したい
+
+
+
+エスプリントエフ
+<pre>
+<?php $date = sprintf('%04d年 %02d月 %02d日', 2018, 1, 23);
+print ($date)?>
+</pre>
+※%04dだと4桁。0は0で補ってくださいという意味。
+dはデジットで数字という意味。
+パラメタの数は1個目のパラメタで指定している%なになにというものの数によって来る。
+%が3つあるのでその後に続けて3つのパラメタを指定するということ。
+
+・<pre>
+<?php $date = sprintf('%04d年 % 10d月 %02d日', 2018, 1, 23);
+print ($date)?>
+</pre>
+
+
+
+半角空白が10個入る。
+
+・<pre>
+<?php $date = sprintf('%04d年 % 2d月 % 2d日', 'abcde', 12, 5);
+print ($date)?>
+</pre>
+
+
+
+sprintfはちょっとした入力チェックみたいなものもできる。
+abcdeは数字ではないのでそのままでは受け入れられないということで無視して
+実行結果
+0000年 12月  5日と表示される
+※表示の崩れを防ぐということができる。
+
+・<pre>
+<?php $date = sprintf('%04s年 % 2d月 % 2d日', 'abcde', 12, 5);
+print ($date)?>
+</pre>
+
+
+
+実行結果
+abcde年 12月  5日
+
+・2018年 12月  5日 金と表示
+
+
+
+<pre>
+<?php $date = sprintf('%04d年 % 2d月 % 2d日 %s', '2018', 12, 5, '金');
+print ($date)?>
+</pre>
+と表示
+
+・htdocsの中に
+見られてはいけない情報が入っているファイルを配置してはいけない。
+
+
+
+■日々、サーバーを狙っているハッカーやクラッカーはサーバー内に隠されている情報を見つけ出そうと
+している。
+htdocsではなく別のフォルダに設置する。
+例
+C:\xampp\news_data
+※Windowsの場合はフォルダを作成しただけでこの後、ファイルを保存することができる。
+通常、Webサーバーはセキュリティが厳しくなっているため、このままでは書き込めないディレクトリ
+になっている可能性がある。
+
+
+・様々な内容のものをファイルに書き込む
+
+
+
+<?php 
+$success = file_put_contents('../../news_data/news.txt','2018-06-01 ホームページをリニューアルしました。');
+if($success){
+    print('ファイルへの書込みが完了しました');
+}else{
+    print('書込みに失敗しました。フォルダの権限などを確認してください。');
+}
+?>
+</pre>
+⇒
+file_put_contentsファンクション
+※成功したかどうかの戻り値がある
+「../」は1階層上。カレントは「C:\xampp\htdocs\php\sample10.php」
+⇒
+実行結果
+画面には
+「ファイルへの書込みが完了しました」が表示され、
+C:\xampp\news_data\news.txt
+ができ中身は「2018-06-01 ホームページをリニューアルしました。」
+
+・ファイルの読みこみ
+ファイルの中身
+「2018-06-02 新商品が出ました。
+2018-06-01 ホームページをリニューアルしました。」
+
+
+
+file_get_contents
+戻り値としてファイルの内容を得ることが出来る。
+⇒
+<pre>
+<?php 
+$news = file_get_contents('../../news_data/news.txt');
+print($news);
+?>
+</pre>
+⇒
+実行結果
+2018-06-02 新商品が出ました。
+2018-06-01 ホームページをリニューアルしました。
+※
+<?php 
+readfile('../../news_data/news.txt');
+?>でも同じ表示。
+⇒
+戻り値なしでそのままファイルの中身を画面に表示できる。
+readfileの場合、読み込んだデータを再加工したりなどが対応していない。
+
+・読み込んだファイルに
+「"2018-06-03 ニュースを追加しました"」を追記(一番下に追記)
+
+
+
+<?php 
+$news = file_get_contents('../../news_data/news.txt');
+$news .= "2018-06-03 ニュースを追加しました";
+file_put_contents('../../news_data/news.txt',$news);
+?>
+※「.=」は文字列連結の応用的な書き方。
+
+・読み込んだファイルに
+「"2018-06-03 ニュースを追加しました"」を追記(一番上に追記)
+
+
+
+<pre>
+<?php 
+$news = file_get_contents('../../news_data/news.txt');
+$news = "2018-06-03 ニュースを追加しました\n" . $news;
+file_put_contents('../../news_data/news.txt',$news);
+?>
+</pre>
+
+・XML
+
+
+
+Extensible Markup Language
+Markup Languageと呼ばれる言語。
+タグで様々な情報を囲みながらグループにして管理していく
+拡張できるマークアップ言語(様々な分野で利用できるファイル)
+マークアップ言語はいくつかの種類があり、最も一般的なものはは
+HTML(webページを作るためのマークアップ言語)
+
+
+・XMLが使われている一般的な例
+
+
+
+RSS
+Webページが更新されたかどうかをツールなどで確認したり、電子メールで通知してくれるという
+サービスがあるがそのようなものが使っているのがXML。
+
+・RSS
+
+
+
+https://www.asobou.co.jp/blog/life/rss-2
+
+・XMLの読み込み
+
+
+
+■<?php 
+$xmlTree = simplexml_load_file('https://h2o-space.com/feed/');
+var_dump($xmlTree);
+foreach ($xmlTree->channel->item as $item):
+?>
+・ <a href="<?php print($item->link); ?>"><?php print 
+($item->title); ?></a>
+<?php
+endforeach;
+?>
+</pre>
+⇒
+https://h2o-space.com/feed/
+で筆者のXMLをロードすることができる
+※$xmlTreeはオブジェクト
+$xmlTreeのchannelプロパティの
+item(配列形式)を$itemの中に入れている
+ 「->」はプロパティやメソッドにアクセスするという意味。中の要素にアクセスしている。
+⇒
+<channel>
+  <title>H2O space</title>
+  ~
+  <item>
+     <title>よくわかるPHP
+     <link>https~
+  ～
+　</item>
+  <item>
+※itemというタグがたくさんあることで
+そのWebサイトのお知らせの内容を5件、10件
+などまで取得できる
+★実行結果
+リンクが張られた文字が表示される。
+XMLの情報が来てそれを表示している仕組み
+※var_dump($xmlTree);でXMLの内容が見れる
+⇒
+Webページが更新されると新しいニュースがWebページに更新される。
+このように外部の情報の更新情報を取得したり、RSSを何かの形にして生成して簡単に読み込めれる。
+
+
+・JSON メリット
+
+
+
+データの交換に優れているのでPHP以外の言語でもJSONが扱えるようになっている。
+XMLの場合は、タグでそれぞれの要素を囲わないといけないのでデータの容量が増えてしまう。
+JSONの場合、書かなければならない約束事が非常に少なくなっていて、短く書くことが出来る。
+https://h2o-space.com/feed/json
+でJSONのデータを得ることが出来る。
+※近年、XMLよりJSONの方が一般的になっている。
+外部のサービスを使って、情報を取り込んでウエブページを表示する場合、JSONを使う場合が多い
+
+・JSONのデータをPHPで扱うには
+
+
+
+json_decodeファンクション。
+JSONを処理した結果を返してくれる。
+例
+<pre>
+<?php 
+$file = file_get_contents('https://h2o-space.com/feed/json/');
+$json = json_decode($file); //$jsonにはオブジェクトの形で各要素が展開される
+foreach($json->items as $item):
+?>
+・ <a href="<?php print($item->url); ?>"><?php print 
+($item->title); ?></a>
+<?php
+endforeach;
+?>
+</pre>
+⇒
+画面には
+・ kintone devCamp 2018の開催レポートが掲載されました
+・ kintone構築のお手伝いをした FACE to FUKUSHI様がサイボウズの事例に掲載されました
+としてリンクが表示
+
+・★https://h2o-space.com/feed/json/'のJSONの中身
+items	
+0	
+id	"https://h2o-space.com/2018/09/1557/"
+url	"https://h2o-space.com/2018/09/1557/"
+title	"kintone devCamp 2018の開催レポートが掲載されました"
+～
+1	
+id	"https://h2o-space.com/2018/08/1554/"
+url	"https://h2o-space.com/2018/08/1554/"
+title	"kintone構築のお手伝いをした FACE to FUKUSHI様がサイボウズの事例に掲載されました"
+
+・<?php 
+$file = file_get_contents('https://h2o-space.com/feed/json/');
+var_dump($file);
+
+?>
+でJSONのデータが見える
+例
+
+
+string(12959) "{
+    "version": "https://jsonfeed.org/version/1",
+    "user_comment": "This feed allows you to read the posts from this site in any feed reader that supports the JSON Feed format. To add this feed to your reader, copy the following URL -- https://h2o-space.com/feed/json/ -- and add it your reader.",
+    "home_page_url": "https://h2o-space.com",
+    "feed_url": "https://h2o-space.com/feed/json/",
+    "title": "H2O space",
+    "description": "\u3061\u3083\u3093\u3068Web",
+    "items": [
+        {
+            "id": "https://h2o-space.com/2018/09/1557/",
+            "url": "https://h2o-space.com/2018/09/1557/",
+            "title": "kintone devCamp 2018\u306e\u958b\u50ac\u30ec\u30dd\u30fc\u30c8\u304c\u63b2\u8f09\u3055\u308c\u307e\u3057\u305f",
+            "content_html": 
+        ～
+        },
+         {
+            "id": "https://h2o-space.com/2018/08/1554/",
+            "url": "https://h2o-space.com/2018/08/1554/",
+            "title": "kintone\u69cb\u7bc9\u306e\u304a\u624b\u4f1d\u3044\u3092\u3057\u305f FACE to FUKUSHI\u69d8\u304c\u30b5\u30a4\u30dc\u30a6\u30ba\u306e\u4e8b\u4f8b\u306b\u63b2\u8f09\u3055\u308c\u307e\u3057\u305f",
+            "content_html": "
+※中かっこから始まっている。itemsのところはグループになっている
+
+・
+<?php 
+$file = file_get_contents('https://h2o-space.com/feed/json/');
+$json = json_decode($file);
+var_dump($json);
+?>
+とすると
+
+
+
+PHPのオブジェクトとなっていることが分かる
+⇒
+object(stdClass)#1 (7) {
+  ["version"]=>
+  string(30) "https://jsonfeed.org/version/1"
+  ["user_comment"]=>
+  string(227) "This feed allows you to read the posts from this site in any feed reader that supports the JSON Feed format. To add this feed to your reader, copy the following URL -- https://h2o-space.com/feed/json/ -- and add it your reader."
+  ["home_page_url"]=>
+  string(21) "https://h2o-space.com"
+～
+
+・
+<?php 
+$file = file_get_contents('https://h2o-space.com/feed/json/');
+$json = json_decode($file);
+var_dump($json->home_page_url);
+?>
+
+
+
+string(21) "https://h2o-space.com"
+と表示され、画面に内容を表示できる。
+
+・簡単なフォーム
+
+
+
+<form action="submit.php" method="get">
+  <label for="my_name">お名前：</label>
+  <input type="text" id="my_name" name="my_name" maxlength="255" value="">
+  <input type="submit" value="送信する"> 
+</form>
+■nameはフォームを送信したときにPHPに渡されるときのキーとなる値。通常はID属性と
+同じでよい。
+http://localhost:8888/php/sample17/index.html
+■actionは送信ボタンを押したときの送信先
+■formタグがないと送信するボタン押しても何も反応しないがあるとページが遷移される。
+submit.phpに値が送信される。
+⇒URLが変化していることが分かる。
+http://localhost:8888/php/sample17/submit.php?my_name=aaa
+※URLにのせて値を送信するのがget
+method="post"なら
+http://localhost:8888/php/sample17/submit.php
+といったように送った値が記載されていない。
+postを使うと裏側でデータを送信できる。
+
+・submit.php
+
+
+
+<main>
+<h2>Practice</h2>
+<pre>
+お名前：
+<?php print(htmlspecialchars($_REQUEST['my_name'], ENT_QUOTES));
+?>
+</pre>
+とし、index.htmlのテキストに値を入力し、送信ボタンを押すと、
+http://localhost:8888/php/sample17/submit.php?my_name=aaa
+になり、submit.phpで入力した値が名前のところに表示される。
+※$_REQUESTがフォームの値を受け取るためのプログラム。name属性でつけたものをそこに入れる。
+グローバル変数と呼ばれるもの。
+⇒
+<?php print($_REQUEST['my_name']);
+でもうまくいくがセキュリティを考えるとよくない。
+⇒
+htmlspecialcharsはhtmlのタグなどとして認識される文字を逃がすという意味。
+このファンクションがないとtextボックスに入力した
+例
+<stron g>いたずら</stron g>
+が認識されてしまう。太字でいたずらと画面に表示される。JavaScriptを組み合わされることで
+危険なプログラムを作ることができたりする。
+htmlspecialcharsを使用することで<strong>いたずら</strong>が画面にそのまま表示されるようになる。
+htmlspecialcharsはパラメタが2つ必要で
+1つ目に何をエスケープするのか
+2つ目にどのようにエスケープするのか。基本的にENT_QUOTESでよい
+■$_REQUESTのところは他に書き方として
+$_GET
+$_POST　※これを指定すると今はエラー出る。フォームを作成したときのメソッド属性をmethod="post"にすれば問題ない。合わせる必要あり
+■稀にフォームのメソッド属性が何で送られてくるのか分からないときに使えれるのが$_REQUEST。
+getで送られてきたときもpostで送られてきたときも両方受け取ることが出来る。汎用的。
+method="get"、method="post"にしてもエラーは出ず、正常に動作。
+しかし
+パスワードなどpostで送るデータをgetで送ることで受け取ってしまい思っていない動作になってしまうのでどちらか
+あらかじめどちらかで送られ鵜のかわかっている場合であれば、合わせて記述した方が安全性がより高くなる。
