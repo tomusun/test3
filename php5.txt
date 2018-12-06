@@ -1,0 +1,417 @@
+PHP動画5(複数チェックボックス送信、半角数字直して数字であるかチェック、郵便番号チェック、header、剰余算、クッキー、セッション)
+◯
+●index.html
+<main>
+<h2>Practice</h2>
+<form action="submit.php" method="post">
+<p>性別:
+<input type="radio" name="gender" value="male">男性
+/
+<input type="radio" name="gender" value="female">女性
+</p>
+<input type="submit" value="送信する">
+</form>
+</main>
+●submit.php
+<main>
+<h2>Practice</h2>
+<pre>
+お名前：
+php print(htmlspecialchars($_POST['gender'], ENT_QUOTES)); ?
+</pre>
+</main>
+⇒
+女性の方にチェック入れて送信ボタン押すと
+
+
+
+実行結果
+femaleが表示される
+※ラジオボタンのところのvalue属性がmaleやfemaleになっているので
+実際に送信される値はその値になる。
+
+◯
+●index.html
+<main>
+<h2>Practice</h2>
+<form action="submit.php" method="post">
+<p>性別:
+<input type="radio" name="gender" value="male">男性
+/
+<input type="radio" name="gender" value="female">女性
+</p>
+<input type="text" name="my_name" value="初期値">
+
+<input type="checkbox" name="agree" value="on"> 同意する
+
+<select name="pref">
+<option value="hokkaido">北海道</option>
+<option value="aomori">青森県</option>
+</select>
+<input type="submit" value="送信する">
+</form>
+</main>
+●submit.php
+php print(htmlspecialchars($_POST['gender'], ENT_QUOTES));
+print(htmlspecialchars($_POST['agree'], ENT_QUOTES));
+print(htmlspecialchars($_POST['pref'], ENT_QUOTES));
+?>
+
+
+選択したvalueの値が表示される。
+例
+お名前：
+maleonhokkaido
+
+◯複数のチェックボックスに複数チェックを入れて送信
+
+
+
+
+●index.html
+<form action="submit.php" method="post">
+<p>ご予約希望日</p>
+<p>
+<input type="checkbox" name="reserve[]" value="1/1">1月1日<br>
+<input type="checkbox" name="reserve[]" value="1/2">1月2日<br>
+<input type="checkbox" name="reserve[]" value="1/3">1月3日<br>
+</p>
+<input type="submit" value="送信する">
+</form>
+●submit.php
+php
+foreach($_POST['reserve'] as $reserve)
+print(htmlspecialchars($reserve, ENT_QUOTES) . ' ');
+?>
+⇒
+チェックボックスの値を受け取る場合は工夫が必要
+チェックボックスの値は配列で渡ってくる。
+チェックした値を全て画面に表示できる。
+⇒
+実行結果
+複数チェックを入れた場合は
+画面に
+1/1 1/2 1/3
+と表示される。
+※name="reserve"とすると送信ボタンを押したときに
+Warning: Invalid argument supplied for foreach()～
+
+・半角数字に直して、数字であるかをチェックをする
+
+
+
+■年齢や郵便番号など半角数字で入力してほしい項目がある。
+誤って全角数字で入力するユーザーがいる。
+プログラムで半角する時に直すと親切。
+⇒
+php
+$age = '２０';
+
+if(is_numeric){
+print($age . '歳');
+}else{
+print('数字ではありません');
+}
+?>
+⇒「数字ではありません」と表示。
+⇒
+$age = '２０';
+$age = mb_convert_kana($age, 'n', 'UTF-8');
+
+if(is_numeric($age)){
+print($age . '歳');
+}else{
+print('数字ではありません');
+}
+実行結果
+20歳
+⇒
+is_numericは
+指定したパラメタが数字かどうかを判断してくれる。数字であった場合はtrue。
+⇒
+mbはマルチバイトの略称で日本語など全角を扱うときに使われる言葉。
+様々な、かなを変換するというファンクション。
+n 「全角」数字を「半角」に変換
+※https://webkaru.net/php/function-mb-convert-kana/
+⇒
+半角の数字に直すという指定ができる。
+例
+$age = mb_convert_kana($age, 'n', 'UTF-8');
+※きちんと数字で判断されるようになっている。
+mb_convert_kanaは半角のかなに直したり、全角のかなにしたり、英数字や全角や半角にしたりなども
+できる。
+
+・郵便番号をチェックする
+
+
+
+$zip = mb_convert_kana($zip, 'a', 'UTF-8');
+⇒小文字のaは英数字を半角に直すというもの。
+郵便番号ではハイフンが入ってくるのでaを使用
+if構文で正規表現を使うときは
+preg_matchファンクションを使う。
+⇒
+$zip = '987-6543';
+$zip = mb_convert_kana($zip, 'a', 'UTF-8');//小文字のaは英数字を半角に直すというもの。
+
+if(preg_match("/\A\d{3}[-]\d{4}\z/",$zip)){
+print('郵便番号:〒' . $zip);
+}else{
+print('郵便番号を 123-4567の形式でご記入ください');
+}
+※$zip = '１２３-４５６７';でも問題はなし。
+\d{3}[-]\d{4}で郵便番号としての書式をチェックしている。
+\Aは文章の頭である、先頭からという意味。これがないと、頭に違うもの('aaaa987-6543')を許してしまう。
+\zは文章の最後であるという意味。
+※電話番号やメールアドレスの場合、様々なパターンがあるため、正規表現で表すのは非常に
+難しい。そのためHTML5で搭載されているブラウザのチェック機能で簡単にチェックでき、簡易的に
+済ませるという方法が一般的になっている。
+
+・headerファンクション
+
+
+
+php
+header('Location: https://h2o-space.com');
+exit();
+?>
+■別のページへのジャンプなど
+ウエブブラウザに対してヘッダーを送信する。ウエブブラウザはヘッダーを受け取ってWebページを
+表示するのか、別のページにジャンプするのか、別の動きをするのかなど様々な指示をすることができる。
+Location～は
+別の場所へ移動してくださいという意味。
+
+・剰余算
+
+
+
+余りを求めること。
+例
+10 / 3 = 3... 1
+※ここで1を求めるのが剰余算
+剰余算はパーセントで表す。
+0 % 2 = 0
+1 % 2 = 1
+2 % 2 = 0
+3 % 2 = 1
+4 % 2 = 0
+や
+0 % 3 = 0
+1 % 3 = 1
+2 % 3 = 2
+3 % 3 = 0
+4 % 3 = 1
+5 % 3 = 2
+6 % 3 = 0
+⇒
+剰余算の特徴として同じ数字で割っていくとその割った数字より1つ低い数字までで
+繰り替えされる性格がある。
+
+・曜日の出力にしたい
+剰余算を考慮
+
+
+
+php
+$week = array('金','土','日','月','火','水','木');
+for($i=1;$i<31;$i++){
+print($week[$i%7] . "\n");
+}
+?>
+実行結果
+土
+日
+月
+火
+水
+木
+金
+土
+日
+
+・テーブルで奇数行の背景をグレー
+
+
+
+<table>
+<?php for ($i=1; $i<=10; $i++){ if($i % 2){ print('<tr style="background-color: #ccc">');
+}else{
+print('<tr>');
+}
+print('<td>' . $i . '行目</td>');
+print('<tr>');
+}
+?>
+</table>
+⇒
+実行結果
+1行目
+2行目
+3行目
+～
+
+・クッキー機能使われる場面
+
+
+
+ログイン画面で「ログインID、パスワードを記憶する」といったチェックボックス
+を見ることがある。
+次回、WebサイトにアクセスしたときにログインID、パスワードが自動的に入力されているという機能。
+こういったときに使われるクッキー機能。ブラウザに記憶させる。
+
+・PHPでクッキー
+
+
+
+ファイルの先頭に書く。
+●index.php
+php
+setcookie('save_message','Cookieに保存した値です', time() + 60 * 60 * 24 * 14);
+?>
+<!doctype html>
+<html lang="ja">
+<head>
+～
+<pre>
+<a href="page02.php">Page02へ</a>
+</pre>
+●page02.php
+<h2>Practice</h2>
+<pre>
+php print($_COOKIE['save_message']);?
+</pre>
+⇒
+実行結果
+Cookieに保存した値です
+※index.phpを表示の段階クッキーの値が保存されている。
+※setcookie
+最初のパラメータにクッキーのキーを指定。
+2番目に保存したい内容を指定。
+3番目にこのクッキーをいつまで保存しておくのか(expireという情報)
+現在の時刻+1日×14日間
+⇒
+page02.phpに保存したクッキーの情報を表示
+クッキーの値は$_COOKIEというグローバル変数に格納される
+
+・
+●index.php
+php
+$value = '変数に保存した値';
+setcookie('save_message','Cookieに保存した値です', time() + 60 * 60 * 24 * 14);
+?>
+～
+<pre>
+<a href="page02.php">Page02へ</a>
+</pre>
+●page02.php
+<pre>
+変数の値：php print($value);?
+クッキーの値：php print($_COOKIE['save_message']);?
+</pre>
+実行結果
+「Page02へ」のリンクをクリック後
+
+
+
+変数の値：
+Notice: Undefined variable: value in C:\xampp\htdocs\php\sample24\page02.php on line 21
+クッキーの値：Cookieに保存した値です
+※変数は画面のなかでのみ使えるもので、画面を移動したり、画面を閉じたりするとその時点で
+変数は消えてしまう。
+
+・保存したクッキーの内容はウエブブラウザで見ることが出来る。
+
+
+
+F12のApplicationのStorageの中のcookieで見れる
+例
+●Name
+save_message
+●value
+Cookie%E3~
+●Expires※有効期限
+2018-12-11T13:54:56.239Z
+※ブラウザを閉じて、起動後
+http://localhost:8888/php/sample24/page02.phpでアクセスしてもクッキーの保存されている
+値が画面に表示されていることを確認できる
+
+・bool setcookie ( string $name [, string $value = "" [, int $expire = 0 [, string $path = "" [, string $domain = "" [, bool $secure = FALSE [, bool $httponly = FALSE ]]]]]] )
+
+
+
+クッキーの値は攻撃によって盗まれることがある。
+$pathは指定されたパスの中でしか使えないクッキーを作ることができる。
+$domainでドメインで絞る。
+$secureはhttpsのセキュリティのかかったWebページの中でしか使えないクッキーを作ることができる。
+$httponlyでtrueにした場合、JavaScriptなどのアクセスが禁止される。
+※この辺りを指定するとセキュリティのつ用意クッキーを作ることが出来るが、逆に使いにくくなって
+しまうこともあるのでバランスよくやること
+
+・セッション
+
+
+
+変数の内容を一時的に保存したいときはクッキーを使わずにセッションを使うのが正しい方法。
+●index.php
+php
+session_start();
+$_SESSION['session_messeage'] = '値をセッションに保存しました。';
+?>
+<!doctype html>
+<html lang="ja">
+<head>
+～
+<pre>
+<p>セッションに値を保存しました。次のページに移動してみましょう。</p>
+$raquo;<a href="page02.php">Page02へ</a>
+</pre>
+⇒
+セッションの情報の記憶。
+●page02.php
+php
+session_start();
+?>
+<!doctype html>
+<html lang="ja">
+<head>
+～
+<pre>
+php print($_SESSION['session_messeage']);?
+</pre>
+※page02.phpでも
+php session_start(); ?
+が必要なので注意。これを使わないとPHPでは使えない仕様になっている。
+※cookieと違ってブラウザを閉じて起動してhttp://localhost:8888/php/sample25/page02.php打ち込んだらエラーはでる。
+ブラウザを閉じてしまうとセッション情報は消えてしまう。ページ間を遷移するときは値は保持されている。
+※_SESSIONはグローバル変数
+
+・php.iniの中の
+
+
+
+■session.auto_start=0
+これを1にすると自動的にセッションがスタートされるようになり、「session_start();」という記述は必要
+なくなる。Webサイトで常時、セッションを使う場合は、session.auto_startを有効にしておくのがいいかもしれないが
+全体的な負荷が上がってしまうのでセッションを使うところだけ「session_start();」を書くのが良い。
+
+・セッションの仕組み
+
+
+
+■セッションはクッキーと違い、Webサーバーに値が保存される。
+Webサーバーに保存されるのでクッキーに比べると安全性はクッキーよりも若干高い。
+サーバーに保存した情報をどのブラウザの情報なのかというのを判別するためにセッションIDを割り振る。
+セッションIDをウエブブラウザはクッキーに保存し、そのセッションIDを使ってセッションの内容を受け渡す
+という仕組み。
+⇒
+F12のApplicationのStorageの中のcookie
+●Name
+PHPSESSID
+●value
+nlprkn～
+●Expires※すでに過ぎた形になっているのでブラウザを閉じたときに消滅するという仕組み
+1969-12-31～
+⇒
+セッションIDが盗まれてしまうとそこからたどってパスワードなどを盗み出すというセッションハイジャックという
+攻撃にさらされることもあるのでパスワードなどの個人情報をセッションに保存するときは
+セッションIDの扱いに気を付けること。

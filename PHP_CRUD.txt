@@ -1,0 +1,166 @@
+
+●input.html
+<main>
+<h2>Practice</h2>
+<form action="input_do.php" method="post">
+<textarea name="memo" cols="50" rows="10" placeholder="自由にメモを残して下さい。"></textarea><br>
+<button type="submit">登録する</button>
+</form>
+</main>
+
+●input_do.php
+<main>
+<h2>Practice</h2>
+php require('dbconnect.php'); $statement = $db-prepare('INSERT INTO memos SET memo=?, created_at=NOW()');
+$statement->bindParam(1, $_POST['memo']); //複数?がある場合はこの書き方
+$statement->execute();
+echo 'メッセージが登録されました';
+?>
+</main>
+
+●dbconnect.php
+php
+try{
+$db = new PDO('mysql:dbname=mydb;host=127.0.0.1;charset=utf8','root','');//phpMyadminで作ったmydbを指定
+}catch(PDOException $e){
+echo 'DB接続エラー:' . $e->getMesseage();
+}
+$memos = $db->query('SELECT * FROM memos ORDER BY id DESC');
+?>
+
+●index.php(一覧画面)
+php
+require('dbconnect.php');
+
+// 各ケースに対応した形
+if (isset($_REQUEST['page']) && is_numeric($_REQUEST['page'])){
+$page = $_REQUEST['page'];
+}else{
+$page = 1;
+}
+// page=1 ... LIMIT 0,5
+// page=2 ... LIMIT 5,5
+// page=3 ... LIMIT 10,5
+// これを計算で求めると
+// 5 * (page -1);
+$start = 5 * ($page - 1);
+
+$memos = $db->prepare('SELECT * FROM memos ORDER BY id DESC LIMIT ?, 5');
+$memos->bindParam(1, $start, PDO::PARAM_INT);//GETやPOSTで来る可能性があるので$_REQUEST。PDO::PARAM_INTで数字で渡すことが出来る
+$memos->execute();
+?>
+
+<article>
+php while ($memo = $memos->fetch()): ?>
+<p><a href="memo.php?id= php print($memo['id']); ?>">php print(mb_substr($memo['memo'], 0, 50)); ?</a></p>
+<time>php print($memo['created_at'])?</time>
+
+php endwhile; ?
+
+php if ($page >= 2): ?>
+<a href="index.php?page=<?php print($page-1); ?>">php print($page-1); ?ページ目へ</a>
+php endif; ?
+|
+php
+$counts = $db->query('SELECT COUNT(*) as cnt FROM memos');
+$count = $counts->fetch();
+// 1件... 1p 1を5で割ると0.2 切り上げると1
+// 2...1p 2を5で割ると0.4
+// 6...2p 6を5で割ると1.2 切り上げると2
+// 11...3p 11を5で割ると2.2 切り上げると3
+$max_page = ceil($count['cnt'] / 5);
+if($page < $max_page):
+?>
+<a href="index.php?page=<?php print($page+1); ?>">php print($page+1); ?ページ目へ</a>
+php endif; ?>
+
+</article>
+</main>
+
+●memo.php(確認画面)
+<main>
+<h2>Practice</h2>
+php
+require('dbconnect.php');
+
+$id = $_REQUEST['id'];
+if(!is_numeric($id) || $id <= 0){
+//数字ではないときに処理
+print('1以上の数字で指定してください');
+exit();
+}
+
+$memos = $db->prepare('SELECT * FROM memos where id=?');
+$memos->execute(array($id));
+$memo = $memos->fetch();
+?>
+<article>
+<pre>php print($memo['memo']); ?</pre>
+<a href="update.php?id=<?php print($memo['id']); ?>">編集する</a>
+|
+<a href="delete.php?id=<?php print($memo['id']); ?>">削除する</a>
+|
+<a href="index.php">戻る</a>
+</article>
+</main>
+
+●update.php
+php require('dbconnect.php'); ?>
+<!doctype html>
+～
+<main>
+<h2>Practice</h2>
+
+php
+if(isset($_REQUEST['id']) && is_numeric($_REQUEST['id'])){
+// http://localhost:8888/memo/update.php?id=1
+// とすると１番目のデータが編集できるようになるということ。
+$id = $_REQUEST['id'];
+
+$memos = $db->prepare('SELECT * FROM memos WHERE id=?');
+$memos->execute(array($id));
+$memo = $memos->fetch();
+}
+?>
+<form action="update_do.php" method="post">
+<input type="hidden" name="id" value="<?php print($id); ?>">
+<textarea name="memo" cols="50" rows="10"><?php print($memo['memo']); ?></textarea><br>
+<button type="submit">登録する</button>
+</form>
+</main>
+
+●update_do.php
+<main>
+<h2>Practice</h2>
+<pre>
+php
+require('dbconnect.php');
+
+$statement = $db->prepare('UPDATE memos SET memo=? WHERE id=?');
+$statement->execute(array($_POST['memo'], $_POST['id']));
+?>
+メモの内容を変更しました
+</pre>
+<p><a href="index.php">戻る</a></p>
+</main>
+
+●delete.php
+<main>
+<h2>Practice</h2>
+<pre>
+php
+require('dbconnect.php');
+if(isset($_REQUEST['id']) && is_numeric($_REQUEST['id'])){
+
+$id = $_REQUEST['id'];
+$statement = $db->prepare('DELETE FROM memos WHERE id=?');
+$statement->execute(array($id));
+}
+?>
+メモを削除しました
+</pre>
+<p><a href="index.php">戻る</a></p>
+</main>
+
+    コメント
+

@@ -1,0 +1,263 @@
+PHP動画7(timestamp型カラム追加、LIMIT 2,3、バックアップ取方、復元、PHPからDB接続、try catchがないと、フォーム入力値をDB登録、execメソッド、?が複数あり埋込)
+・timestamp型のカラムを追加すると
+
+
+
+■自動で現在の日付と時刻が入った値が入る。
+例
+2018-12-06 13:29:53
+編集アンカーをクリックしていずれかのカラムの値を変更するとtimestamp型のカラム値も変更される。
+timestamp型のカラムに属性として
+「on update CURRENT_TIMESTAM」が追加され、そのデータをいつ作り、いつ変更したのかというものを随時記録
+しておくことが出来る。
+
+・makersテーブルとmy_itemsテーブルのmaker_idを紐づけれる
+生産者のIDを数字で入れる。
+
+・cartsテーブルはどの商品が何個売れたかを記録していく
+select * FROM my_items,carts where my_items.id=carts.item_id
+※内部結合
+
+・select * from carts LIMIT 2,3
+
+
+
+2件目から3件取得することができる。
+
+・データベースはハードディスクに記録されているのでもしハードディスクを壊れてしまった場合、何か
+ソフトウェアの障害などでデータにアクセスできなくなった場合、それまでに蓄積したデータが全て消えて
+しまうことになるので日常的にバックアップを取っていかないといけない。
+
+・バックアップの取り方
+
+
+
+エクスポートボタン
+※テーブルを選択した状態でエクスポートボタン押すとテーブルをエクスポートするということ。
+これでは1つのテーブルしかバックアップが取れない。
+mydbを押した状態でエクスポートボタンを押すとデータベースをバックアップできる。
+家アイコンを押してエクスポートを押すとすべてのデータベースをバックアップできる。
+⇒
+Export methodは簡易と詳細があるが
+基本的にデータのバックアップであれば簡易で構わない。
+そのまま実行ボタンを押す。
+⇒
+ファイルを保存できる。
+中身はSQLの集まり。
+例
+-- 
+-- テーブルの構造 `makers`
+-- 
+
+CREATE TABLE `makers` (
+`id` int(11) NOT NULL,
+`name` text NOT NULL,
+`address` text NOT NULL,
+`tel` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- 
+-- テーブルのデータのダンプ `makers`
+-- 
+
+INSERT INTO `makers` (`id`, `name`, `address`, `tel`) VALUES
+(1, '山田', '東京都港区', '000-111-222'),
+(2, '斎藤さん', '北海道小樽市', '000-111-333'),
+(3, '川上さん', '神奈川県横浜市', '222-333-444');
+
+・mydbがなくなった場合を想定
+
+
+
+mydbを選択して操作タブをクリックし、
+「データベースを削除する(DROP)」をクリックする。
+⇒
+mydb自体がなくなってしまう。
+
+・とったバックアップから復元していく
+
+
+
+■復元するにはまず復元先のデータベースを作らなければならない。
+⇒
+データベースタグで「mydb」と入力し、文字コードはutf8mb4_general_ciを選び、作成ボタンを押す。
+「mydb」を選択した状態でインポートタグをクリックし、先ほどバックアップしたファイルを選択し、
+実行ボタンをクリック。
+⇒
+中を見ていくと復元できていることが分かる。
+
+・Webシステム作成
+
+
+
+■htdocsフォルダの直下にmemoフォルダを作ってindex.phpを作成(中身は「トップページです。」のみ)。
+http://localhost:8888/memo/index.php
+でアクセス。
+「トップページです。」が表示されることを確認。
+※index.phpはURLの中で省略しても良い。
+
+・PHPからDB接続
+
+
+
+●index.php
+php
+try{
+$db = new PDO('mysql:dbname=mydb;host=127.0.0.1;charset=utf8','root','');//phpMyadminで作ったmydbを指定
+}catch(PDOException $e){
+echo 'DB接続エラー:' . $e->getMesseage();
+}
+?>
+※127.0.0.1は自分自身を表すIPアドレス
+パスワードはZAMPPの場合はないので空でよい。
+問題あればエラーが表示される。
+※「PDO＝PHP DATA OBJECT」でPHPでデータベースを扱うためのオブジェクト
+コンストラクタでパラメタが３つある。
+１つ目は接続文字列。データベースに接続するための文字列。データベースの名前とホスト、文字コードを１つづつセミコロンで区切っていく。
+２つ目はユーザー名
+３つ目はパスワード
+※try catchがないと接続に失敗したときにFatal errorが表示され、プログラムの動作を止めてしまう。
+ユーザーがこのエラーを見ると困惑してしまうかもしれない。
+try catchがあればエラー画面に遷移させたり、DBを使わなくてもできる処理だけを行うといったようなプログラマ
+がどういった動作をするかというのを制御できる。
+■「$e->getMesseage();」は$eの中のメッセージを表示
+
+・PHPでデータをインサート
+
+
+
+■
+php
+try{
+$db = new PDO('mysql:dbname=mydb;host=127.0.0.1;charset=utf8','root','');//phpMyadminで作ったmydbを指定
+}catch(PDOException $e){
+echo 'DB接続エラー:' . $e->getMesseage();
+}
+
+$count = $db->exec('INSERT INTO my_items SET maker_id=1, item_name="もも",price=210,keyword="缶詰,ピンク,甘い"');
+echo $count . '件のデータを挿入しました';
+?>
+⇒
+成功すれば画面に
+「1件のデータを挿入しました」と出る。
+※$db->execの戻り値としてDBに影響を与えた数
+execは検索した結果を受け取るものではない。
+
+・DBからデータを取り出して画面に表示
+
+
+
+<pre>
+php
+try{
+$db = new PDO('mysql:dbname=mydb;host=127.0.0.1;charset=utf8','root','');//phpMyadminで作ったmydbを指定
+}catch(PDOException $e){
+echo 'DB接続エラー:' . $e->getMesseage();
+}
+$records = $db->query('SELECT * FROM my_items');
+while($record = $records->fetch()){
+print($record['item_name'] . "\n");
+}
+?>
+</pre>
+※queryメソッドはSELECTで得られたものを受け取る。
+$recordsはレコードセットのインスタンス。
+fetchは１行を取り出すという意味。
+whileの中の$recordは連想配列。
+
+・フォームから入力した値をDBに登録する。
+
+
+
+新テーブル(memos)をPHPMyAdminで作成
+created_atカラムはDATETIME型でメモの作成日時を記録するカラム
+●input.html ※PHPを書かない場合は拡張子はphpではなくhtmlでよい
+<main>
+<h2>Practice</h2>
+<form action="input_do.php" method="post">
+<textarea name="memo" cols="50" rows="10" placeholder="自由にメモを残して下さい。"></textarea><br>
+<button type="submit">登録する</button>
+</form>
+</main>
+●input_do.php
+<h2>Practice</h2>
+php
+try{
+$db = new PDO('mysql:dbname=mydb;host=127.0.0.1;charset=utf8','root','');//phpMyadminで作ったmydbを指定
+
+$db->exec('INSERT INTO memos SET memo="' . $_POST['memo'] . '", created_at=NOW()');
+}catch(PDOException $e){
+echo 'DB接続エラー:' . $e->getMesseage();
+}
+?>
+※登録した
+created_atカラムは現在時刻が入る
+created_at=NOW()のNOW()はSQLの中で使うことのできる関数。
+⇒
+$_POST['memo']とそのまま記載しているので危険。SQLに投げる値はきちんと処理をして渡さないと危険な文字列、
+危険な記号などが入っているとSQLが意図的に壊されて、DBの中に入っているデータが盗まれるケースがあり得る。
+なのでユーザーが入力する値をSQLにそのまま埋め込むのはよくない。
+▼下記に修正
+php
+try{
+$db = new PDO('mysql:dbname=mydb;host=127.0.0.1;charset=utf8','root','');//phpMyadminで作ったmydbを指定
+
+$statement = $db->prepare('INSERT INTO memos SET memo=?, created_at=NOW()');
+
+$statement->execute(array($_POST['memo']));
+echo 'メッセージが登録されました';
+}catch(PDOException $e){
+echo 'DB接続エラー:' . $e->getMesseage();
+}
+?>
+⇒
+prepareは事前準備
+?にユーザーが入力した値が入ってくるよと準備している。
+executeメソッドで実際にSQLを実行する。(※execメソッドではないので注意)
+executeのパラメタには?に入れたい内容を入れる。
+
+・execメソッド
+
+
+
+execメソッドは完全に安全であることが確認できているSQL、固定されたSQLなどを入力するのならよいが、
+今回のようにPOSTの値をフォームから送信されてきた値をDBに入れる場合はprepareをして安全性を高めて
+入れる必要がある。
+
+・?が複数あり埋め込みたい場合の書き方
+
+
+php
+try{
+$db = new PDO('mysql:dbname=mydb;host=127.0.0.1;charset=utf8','root','');//phpMyadminで作ったmydbを指定
+
+$statement = $db->prepare('INSERT INTO memos SET memo=?, created_at=NOW()');
+
+$statement->bindParam(1, $_POST['memo']); //複数?がある場合はこの書き方
+
+$statement->execute();
+echo 'メッセージが登録されました';
+}catch(PDOException $e){
+echo 'DB接続エラー:' . $e->getMesseage();
+}
+?>
+
+・$count = $db->exec("INSERT INTO tamesi_test(name) values('sss')");
+としても
+timestamp型のJIKOKUには
+
+
+
+現在日付と時間が入る
+例
+2018-12-06 20:12:20
+
+・$count = $db->exec("INSERT INTO tamesi_test(name) values('sss')");
+としてもDATETIME型のDATEには
+
+
+
+0000-00-00 00:00:00が入る。
+$count = $db->exec("INSERT INTO tamesi_test(name,DATE) values('$aaa',NOW())");
+とすれば
+DATEには2018-12-06 20:26:53が入る 
