@@ -1,0 +1,398 @@
+▲もう怖くないGIT⑤(フェッチ、プル、リモートの情報を詳しく確認、リモートを変更、削除、ブランチ、HEAD、レコメンド、コミットファイル詳細、ブランチとHEADの中身、ブランチを新規追加、ブランチの一覧表示)
+・リモートから情報を取得するには2種類のやり方がある
+
+
+
+フェッチ
+プル
+
+・リモートから情報を取得する(フェッチ)
+
+
+
+git fetch <リモート名>
+例
+git fetch orgin 
+⇒
+リモートリポジトリからローカルリポジトリに情報を落としてくる。注意点として、ローカルリポジトリに情報
+を落としてくるだけでワークツリーには情報は反映されない。
+git fetchをすると
+remotes/リモート/ブランチ
+に保存される。
+ワークツリーにも反映させたい場合はGitマージコマンドを使う。
+
+・実践
+
+
+
+オンラインのGITHUBでgit_tutorialリポジトリの中で新規ファイル作成
+home.html
+中身：<p>home</p>
+でコミットボタン
+⇒
+git bashで
+$ git fetch origin
+結果：
+remote: Enumerating objects: 4, done.
+remote: Counting objects: 100% (4/4), done.
+remote: Compressing objects: 100% (2/2), done.
+remote: Total 3 (delta 0), reused 0 (delta 0), pack-reused 0
+Unpacking objects: 100% (3/3), done.
+From https://github.com/ユーザー名/git_tutorial
+   ..  master     -> origin/master
+⇒
+先ほどのGITHUBの情報はどこに保存されているかというと
+$ git branch -a
+結果：
+* master
+  remotes/bak/master
+  remotes/origin/master
+※-aはallの略
+gitブランチの全部の情報を表示するということ。
+* masterの※は今はマスターブランチにいることを示している。
+それとは別にremotesというブランチが2つできている。
+remotes/origin/masterの方に先ほどの変更が反映
+⇒
+$ git checkout remotes/origin/master
+結果：
+Note: checking out 'remotes/origin/master'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by performing another checkout.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -b with the checkout command again. Example:
+
+  git checkout -b <new-branch-name>
+
+HEAD is now at ～ Create home.html
+※
+remotes/origin/masterに自分のワークツリーの内容を切り替える
+⇒
+$ ls
+home.html  index.html  secret.txt
+※home.htmlが追加されている。
+ファイルの中身はcat home.htmlで確認できる。
+⇒
+元の状態に戻す。
+$ git checkout master
+結果：
+Previous HEAD position was ～ Create home.html
+Switched to branch 'master'
+Your branch is up to date with 'bak/master'.
+⇒
+$ ls
+index.html  secret.txt
+⇒
+取得してきたリモートリポジトリの情報をワークツリーの方に反映
+$ git merge origin/master
+結果：
+Updating ～..～
+Fast-forward
+ home.html | 1 +
+ 1 file changed, 1 insertion(+)
+ create mode 100644 home.html
+※originリポジトリのmasterブランチの情報をワークツリーにマージ
+⇒
+$ ls
+結果：
+home.html  index.html  secret.txt
+※このようにfetchを使った場合、git fetchでローカルリポジトリに情報を取得してきて、その情報を
+ワークツリーに反映させたい場合は、git mergeコマンドを使う。
+
+・リモートから情報を取得(プル)
+
+
+
+リモートから情報を取得してマージまでを一度にやりたいときにプルを行う。
+git pull <リモート名> <ブランチ名>
+例
+git pull origin master
+
+# 上記コマンドは省略可能
+git pull
+
+# これは下記コマンドと同じこと
+git fetch origin master
+git merge origin master
+
+・実践
+
+
+
+GUIのGitHubで
+home.htmlに追記
+<p>home</p>
+<p>git pull</p>←追記
+コミットボタン押下
+⇒
+git bashで
+$ git pull origin master
+結果：
+remote: Enumerating objects: 5, done.
+remote: Counting objects: 100% (5/5), done.
+remote: Compressing objects: 100% (2/2), done.
+remote: Total 3 (delta 0), reused 0 (delta 0), pack-reused 0
+Unpacking objects: 100% (3/3), done.
+From https://github.com/ユーザー名/git_tutorial
+ * branch            master     -> FETCH_HEAD
+   ～..～  master     -> origin/master
+Updating 959cbc3..0d25a84
+Fast-forward
+ home.html | 1 +
+ 1 file changed, 1 insertion(+)
+⇒
+ワークツリーの状態を見てみる。
+$ ls
+結果：
+home.html  index.html  secret.txt
+⇒
+$ cat home.html
+<p>home</p>
+<p>git pull</p>
+
+・フェッチとプルの使い分け
+
+
+
+フェッチを基本的に使うのがおすすめ。
+プルは挙動が特殊なので気を付ける。
+※状況として
+ワークツリーにmasterブランチとhogeブランチがあったとする。
+今は自分はmasterにいる。
+git pull origin hoge
+でローカルリポジトリのremotes/origin/hoge
+にリモートリポジトリのhogeの内容が取得される。
+ワークツリーにhogeの内容が反映されるが注意。(masterブランチにhogeブランチがマージされる。hogeブランチに今いた場合は問題ない。)
+ちゃんと理解した上でプルを使用すること。
+
+・リモートの情報を詳しく確認したいとき
+
+
+
+git remote show <リモート名>
+例
+git remote show origin
+※表示される情報
+・FetchとPushのURL
+・リモートブランチ
+・git pullの挙動
+・git pushの挙動
+
+・実践
+
+
+
+$ git remote show origin
+結果：
+* remote origin
+  Fetch URL: https://github.com/ユーザー名/git_tutorial.git
+  Push  URL: https://github.com/ユーザー名/git_tutorial.git
+  HEAD branch: master
+  Remote branch:
+    master tracked
+  Local ref configured for 'git push':
+    master pushes to master (up to date)
+
+・リモートを変更、削除する
+
+
+
+■変更する
+git remote rename <旧リモート名> <新リモート名>
+例
+git remote rename tutorial new_tutorial
+■削除する
+git remote rm <リモート名>
+例
+git remote rm new_tutorial
+
+
+・実践
+
+
+
+$ git remote
+結果：
+bak
+origin
+※どのようなリモートあるか
+⇒
+bakをbackupに変えてみる
+$ git remote rename bak backup
+⇒
+名前が変わったか確認
+$ git remote
+結果：
+backup
+origin
+⇒
+backupを削除
+$ git remote rm backup
+⇒
+削除できたか確認
+$ git remote
+結果：
+origin
+
+・ブランチとマージ
+
+
+
+複数人で開発する際に必須のスキル。
+■マージ
+他の人が開発した変更を自分のところに取り込むことだが非常に事故が起こりやすい。
+■ブランチ
+ブランチは分岐して開発していくためのもの。
+並行して複数機能を開発するためにあるのがブランチ。それを実現するのがブランチ。
+例えば、状況として
+Aさんがヘッダーを修正
+Bさんがレコメンドを開発
+というのを同時にやっていたとする。
+その場合、Aさんはヘッダー修正用のブランチ、Bさんはレコメンド追加用のブランチを作成して
+作業していく。その作業が完了したらおおもとのmasterブランチのほうに変更を取り込むという流れ。
+何がうれしいかというと、ほかのチームで変更された分が自分の開発には影響を受けないというのがブランチの
+うれしいところ。
+もしブランチがなかったとしたら、何か自分が修正を加えていた、ほかの人が先に修正を加えていた、
+そうすると自分の開発していた分に影響が出てしまう。
+
+・レコメンド
+
+
+
+http://e-words.jp/w/%E3%83%AC%E3%82%B3%E3%83%A1%E3%83%B3%E3%83%89.html
+
+・コミットしたときにできるコミットファイル
+
+
+
+ツリー1
+作成者
+日付
+コミットメッセージ
+より詳細に
+051d8～
+tree ツリー1 
+author Kenta May 12 2017
+コミットメッセージ
+※ファイル名が「051d8」となっているが、コミットファイルの中身をハッシュ関数にかけて40文字ほどにした
+ハッシュ値で出来ている。コミットファイルの中身を40文字ほどの英数字に変換するものをハッシュ関数。
+そうすることでファイルの中身に対して一意の英数字ができる。中身が変わればファイル名も変わる。中身が
+一緒であれば同じファイル名といった仕組み。
+
+コミット1の後にコミット2をしたとする。
+コミット2
+f57e2～ ※ハッシュ関数をかけて40文字ほどの英数字にしたもの
+tree ツリー2
+author Kenta
+parent 051d8
+機能を追加
+※親のコミットの情報としてparentを持って親のファイル名を持っているということ。
+parentがあることで前のコミットをたどることが出来る。
+
+・ブランチはコミットを指したポイント
+
+
+
+コミット1 051d8
+コミット2 f57e2
+コミット3 a6923 ※a6923というコミットファイルをmasterが指している状況とする。masterはGITのデフォルトのブランチ名。
+⇒
+その状況においてfeatureというブランチ名を作ったとする。
+featureもa6923というコミットファイルを指している。
+ブランチはコミットファイルを指ししめすポインタ。
+HEADは今、自分が作業しているブランチを指し示しているポインタ。
+今、masterブランチにいるとして新しくファイルを変更してコミットするとコミット4(47f32~)というファイルが
+できる。
+masterブランチはコミット4の方を指ししめすように変わっている。最新のファイルを指し示すような仕組み。
+何がうれしいかというと、自分が作業しているものの最新のコミットが何かわかる。
+⇒
+緊急のバグが出て緊急の開発をしなくてはならなくなったとする。
+コミット3の方でバグが発見されたとする。
+featureブランチの方に今作業するブランチに切り替える。
+何らかの修正をしてコミット。コミット4ダッシュ(21aq2~)が作成。featureブランチが21aq2~の方を
+指し示す形になる。
+さらに変更してコミット5ダッシュ(b65bc~)。featureブランチがb65bc~の方を
+指し示す形になる。
+HEADは今、featureブランチを指し示している。
+全体を見てみると、masterブランチとfeatureブランチで並行して開発が出来ているということになる。
+masterブランチではコミット4という流れの開発をしていて、
+featureブランチではコミット4ダッシュ、コミット5ダッシュという流れの開発。
+このように開発を分岐させることができる。このことにより、GITでは複数人で複数の機能を並行して
+開発することができるようにしている。
+
+・ブランチとHEADの中身
+masterブランチとfeatureブランチの中身はどうなっているか
+
+
+
+masterブランチはmasterというファイルがあって、その中身はコミット4の47f32というコミットファイル名が記載されている。
+featureブランチも同じようにコミット5ダッシュ(b65bc~)。
+ブランチはコミットIDを記録した単なるポインタに過ぎない。
+シンプルな仕組み。
+HEADの中身は
+「ref: feature」と書いている。
+⇒
+masterやfeature、HEADファイルはリポジトリの中に記録されている。
+HEADに関しては「.git/HEAD」
+masterやfeatureに関しては「.git/refs/」に保存されている。
+
+・ブランチの作成や切替、マージが他のバージョン管理ツールより高速
+
+
+
+他のバージョン管理の場合は変更差分で記録している。
+ブランチを切り替える際に変更差分を毎回、計算しないといけない。
+ブランチはスナップショットへのポインタを切り替えるだけ。
+ブランチの機能はGITにおいて強力な機能。
+
+・ブランチを新規追加する
+
+
+
+git branch <ブランチ名>
+例
+git branch feature
+※ブランチを作成するだけでブランチの切替は行わないので注意
+
+・ブランチの一覧を表示する
+
+
+
+git branch
+# すべてのブランチを表示する
+git branch -a
+※リモートブランチも表示できる。
+
+・実践
+
+
+
+$ git branch
+結果：
+* master
+⇒
+featureブランチを新しく作成
+$ git branch feature
+⇒
+$ git branch
+結果：
+  feature
+* master
+
+・それれぞのブランチがどのコミットを指しているのか
+コマンド
+
+
+
+$ git log --oneline --decorate
+結果：
+～ (HEAD -> master, origin/master, feature) Update home.html
+～ Create home.html
+～ git commit --amendを追記
+～ .gitignoreファイルを追加
+～ git diffを追記
+～ git statusコマンドを追記
+～ initial commit
+※どのブランチがどのコミットを指しているかは「--decorate」

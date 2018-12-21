@@ -1,0 +1,319 @@
+▲もう怖くないGIT⑦(ブランチ名を変更、削除、ブランチを利用した開発の流れ(基本の型)、リモートブランチ、プルリクエスト、GitHub Flow)
+・ブランチ名を変更したいとき
+ブランチを削除したいとき
+
+
+
+■変更
+git branch -m <ブランチ名>
+例
+git branch -m new_branch
+※自分が作業しているブランチの名前を変更する
+-mはmoveの略
+■削除
+git branch -d <ブランチ名>
+例
+git branch -d feature
+※-dはdeleteの略。
+masterにマージされていない変更が残っている場合削除しない。
+例えば、masterからfeatureブランチに移動したとする。
+featureブランチでなにか変更してコミット。
+その時、git branch -d featureというコマンドを打ってもmasterにマージされていない変更があるから
+警告出して削除しない。
+
+# 強制削除する
+git branch -D <ブランチ名>
+
+・実践
+
+
+
+■featureブランチの名前を変更
+⇒
+$ git branch
+結果：
+  feature
+* master
+⇒
+$ git checkout feature
+⇒
+$ git branch -m new_feature
+⇒
+$ git branch
+結果：
+  master
+* new_feature
+■ブランチの削除
+$ git checkout master
+⇒
+$ git branch -d new_feature
+結果：
+Deleted branch new_feature (was ~).
+⇒
+$ git branch
+結果：
+* master
+
+
+・ブランチを利用した開発の流れ
+基本の型
+
+
+
+masterブランチをリリース用ブランチに、開発は
+トピックブランチを作成して進めるのが基本
+リリースしたいトピックごとにトピックブランチを作成して
+そちらの方で開発。開発が終わったらトピックブランチから
+masterブランチにマージ
+何がうれしいかというと、masterブランチを今、常にリリース
+しているものと同じ状態、最新の状態を保っておける。
+今、リリースされているものがどういう内容のものか分かるし、
+もし、リリースした後にバグが起きても、1つ前のVerのmasterブランチに内容を
+リリースすれば、バグがない状態に切り替えられる。
+masterブランチで開発してしまうと、今リリースしているものがどれか分からなくなったり、
+前のVerに戻すのが難しくなったりする。
+
+・リモートブランチとは
+
+
+
+リモートのブランチの状態へのポインタ
+git fetchをすると
+origin/ブランチ名(例：origin/master)としてブランチの内容が保存される
+
+・リモートリポジトリの内容がorigin/ブランチ名の形で保存されているか確認
+
+
+
+$ git fetch
+※最新のGitHubの内容を取得。
+⇒
+$ git branch -a
+結果
+* master
+  remotes/origin/feature
+  remotes/origin/master
+※下2つがリモートブランチ。
+リモートのfeatureブランチの内容は「remotes/origin/feature」に保存されている。
+リモートのmasterブランチの内容は「remotes/origin/master」に保存されている。
+
+・GitHubを利用した開発手順
+プルリクエスト
+
+
+
+自分の変更したコードをリポジトリに取り込んでもらえるよう依頼する機能
+誰かが変更したコードをリポジトリに取り込む前にレビューを挟むためにこういう機能がある。
+例えば、Aさんが変更したコードをレビューもなしにGitHubにあるリポジトリに取り込んでしまうと
+どういう変更があったかも分からないし、そこでバグが発生したり、コードの質が下がったりしてそれ
+を防止することが出来ないため。
+プルリクエストをすると、リポジトリに取り込んでと依頼する。ただ依頼を受けたチームメイトがコード
+レビューをしてレポジトリに取り込む。NGだったらリポジトリには取り込まないといった形で開発する。
+
+・プルリクエストの手順
+
+
+
+①ローカルのワークブランチでmasterブランチを最新に更新
+②ブランチを作成
+③ファイルを変更
+④変更をコミット
+⑤GitHubへPUSH
+⑥チームメンバーにプルリクエストへ送る
+⑦コードレビュー
+⑧問題なければ、プルリクエストをGitHubのmasterブランチにマージ
+⑨ブランチを削除(今まで作成したブランチはいらなくなるので)
+
+・実践
+
+
+
+■pull_requestブランチをmasterの方にコードレビューして内容を取り込む。
+$ git branch
+* master
+⇒
+$ git pull origin master
+※マスターブランチを最新の状態にしている。
+⇒
+$ git checkout -b pull_request
+※pull_requestというブランチを作成
+⇒
+$ git branch
+  master
+* pull_request
+⇒
+ATOMで
+index.htmlに
+<h1>Gitチュートリアル</h1>
+<p>git status</p>
+<p>git diff</p>
+<p>git commit --amend</p>
+<p>git merge</p>
+<p>conflict</p>
+<p>pull request</p>←追記
+⇒
+$ git add index.html
+⇒
+$ git commit
+結果：
+hint: Waiting for your editor to close the file...
+[pull_request b647eb9] pull requestを追記
+ 1 file changed, 1 insertion(+)
+⇒
+$ git push origin pull_request
+結果：
+Enumerating objects: 22, done.
+Counting objects: 100% (22/22), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (16/16), done.
+Writing objects: 100% (17/17), 1.68 KiB | 190.00 KiB/s, done.
+Total 17 (delta 9), reused 0 (delta 0)
+remote: Resolving deltas: 100% (9/9), completed with 1 local object.
+remote:
+remote: Create a pull request for 'pull_request' on GitHub by visiting:
+remote:      https://github.com/ユーザー名/git_tutorial/pull/new/pull_request
+remote:
+To https://github.com/ユーザー名/git_tutorial.git
+ * [new branch]      pull_request -> pull_request
+⇒
+GitHubで確認。
+「Pull requestsタブ」をクリック
+New pull requestボタンをクリック
+base:master▼・・・compare:pull_request▼の形にして
+pull_requestブランチからmasterブランチにプルリクエストを送るよ。
+「Create pull requestボタン」を押す。
+Pull requestのタイトルと本文を入力
+タイトルはPull requestを追記
+本文はレビューお願いいたします。
+「Create pull requestボタン」を押す。
+これでPull requestが作られる。
+コードレビューを依頼するときはReviewersというところをクリックするとこの人に依頼するというのができる。(PUSH通知でメールがいく)
+レビュアーになったつもりで「Pull requestsタブ」をクリックし、
+Pull requestを追記をクリックする。
+「Files changedタブ」をクリック
+変更したファイルの内容が書かれている。
+何か修正してほしいということがあれば、行のところの+をクリックするとコメント欄が出てくるので
+「〇〇に修正お願いします。」といった形で入力後、「Add single comment」ボタンを押す。プルリクエスト送った人に通知がいく。その後、修正を加えてもう一回プルリクエストを送ってのサイクル。
+レビューが完了したらレビュアーは「Files changedタブ」をクリックし、「Review changes▼」をクリックし、
+Approveラジオボタンを押して、「submit review」ボタンを押す
+⇒
+「Pull requestsタブ」をクリックし、「Merge pull request▼」ボタンをクリック。
+Confirm mergeボタンをクリック
+「Pull request successfully merged and closed」と表示される。
+元々のpull_requestブランチはいらないため、「Delete branch」ボタンを押す。
+⇒
+取り込んだ内容を自分のローカルの方にも反映
+$ git checkout master
+$ git pull origin master
+$ git branch -d pull_request
+結果：
+Deleted branch pull_request (was ～).
+※いらないので消す
+
+・自身のmasterブランチをきれいにする
+
+
+
+git branch -D master
+git fetch
+git branch master origin/master
+git branch
+
+・GitとGitHubの開発手順はいくつかある
+
+
+
+その中の1つがGitHub Flow。一番シンプル。
+
+・GitHub Flow
+
+
+
+GitHub社のワークフロー。
+まずmasterブランチがあって何か開発を始めるときは
+masterブランチから開発用のブランチを切っていく。
+開発が終了したら、その開発ブランチからmasterブランチへプルリクエスト。
+コードレビューで承認されたら、そのブランチをマスターにマージしてリリース。
+
+・具体的な流れ
+
+
+
+①masterブランチからブランチを作成
+②ファイルを変更し、コミット
+③同盟のブランチをGitHubへプッシュ
+④プルリクエストを送る
+⑤コードレビューし、masterブランチにマージ
+⑥masterブランチを本番サーバーへデプロイ
+
+・GitHub Flow実践
+
+
+
+$ git branch
+* master
+⇒
+ファイルの変更されていないか
+$ git status
+結果：
+On branch master
+nothing to commit, working tree clean
+⇒
+masterブランチを最新の状態にする
+$ git pull origin master
+結果：
+From https://github.com/ユーザー名/git_tutorial
+ * branch            master     -> FETCH_HEAD
+Already up to date.
+⇒
+新しいブランチ作成
+$ git checkout -b github_flow
+結果：
+Switched to a new branch 'github_flow'
+⇒
+Atomでindex.html
+<h1>Gitチュートリアル</h1>
+<p>git status</p>
+<p>git diff</p>
+<p>git commit --amend</p>
+<p>git merge</p>
+<p>conflict</p>
+<p>pull request</p>
+<p>GitHub Flow</p>←追記
+⇒
+$ git add index.html
+⇒
+$ git commit -v
+結果：
+hint: Waiting for your editor to close the file...
+[github_flow ～] GitHub Flowを追記
+ 1 file changed, 1 insertion(+)
+⇒
+github_flowブランチをGitHubにプッシュ
+$ git push origin github_flow
+⇒
+画面のGitHubに移動
+Pull requestsタブをクリック
+New pull requestボタンをクリック
+base:master▼・・・compare:github_flowにする。(github_flowブランチをmasterブランチにプルリクエスト)
+Create pull requestボタンをクリック。
+タイトルはGitHub Flowを追記
+本文は空
+Create pull requestボタンをクリック。
+※これでプルリクエストが作られた。
+レビューを依頼
+～
+Merge pull request▼ボタンをクリックし、こちらからマージ
+Confirm mergeボタンをクリック
+マージが出来たのでDelete branchボタンでブランチを削除
+デプロイ
+⇒
+GitBushの戻って後片付け
+$ git checkout master
+先ほどのGitHubのmasterブランチの内容をワークブランチの方に取り入れる
+$ git pull origin master
+masterブランチを最新の状態にしたら、自分のワークツリーのgithub_flowブランチを
+削除。
+$ git branch -d github_flow
+※この後、また新しい開発を進めたい場合はこの最新にしたmasterブランチから
+また新しいブランチを作成して開発していけばよい

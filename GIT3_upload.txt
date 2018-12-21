@@ -1,0 +1,320 @@
+▲もう怖くないGIT③(ファイルの削除、削除したものを元に戻す、ファイルの移動を記録、リモートリポジトリにアップ、コマンドにエイリアス、管理しないファイルをGitの管理から外す)
+・ファイルの削除を記録する
+
+
+
+# ファイルごと削除
+git rm <ファイル名>
+git rm -r <ディレクトリ名>
+
+# ファイルを残したいとき
+git rm --cached <ファイル名>
+※rmはremoveの略
+
+git rmコマンドを使うとコミットされたGITの記録からも消える。
+自分のローカルのワークツリーからも消える。
+ワークツリーには残してGITの記録だけ削除したいときは「git rm --cached」
+例えば
+パスワードがのったファイルを間違えてGITに上げてしまった場合など
+
+・イメージ
+
+
+
+リポジトリ index.html
+｜
+ステージ
+｜
+ワークツリー index.html
+⇒
+git rmでリポジトリとワークツリーにあるindex.htmlが削除される。
+git rm --cachedでリポジトリにあるindex.htmlが削除される。
+
+・実践
+
+
+
+$ git rm index.html
+結果：rm 'index.html'
+⇒
+$ git status
+結果：
+On branch master
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+  deleted:    index.html
+※ステージに上げられている変更があるよ。
+削除された変更状態がステージに記録されているということ。
+
+・削除したファイルを元の状態に戻すには
+
+
+
+git reset HEAD index.html
+結果：
+$ git reset HEAD index.html
+Unstaged changes after reset:
+D       index.html
+⇒
+$ git checkout index.html
+※作業ツリーの変更を元に戻すにはcheckoutコマンドを使用します。ファイル名を指定するとそのファイルの変更を元に戻すことができます。
+⇒
+$ ls
+結果：
+index.html
+⇒
+$ git status
+結果：
+On branch master
+nothing to commit, working tree clean
+
+・実践
+
+
+
+$ git rm --cached index.html
+結果：
+rm 'index.html'
+⇒
+$ ls
+結果：
+index.html
+⇒
+$ git status
+結果：
+On branch master
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+
+        deleted:    index.html
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+        index.html
+※リポジトリからは削除されていて、変更状態はステージに追加されているということ
+Untracked files
+はGITでまだ追跡できていないファイルがある。つまり、index.htmlという新規の
+ファイルがある。
+
+・元の状態に戻す
+
+
+
+$ git reset HEAD index.html
+
+・ファイルの移動を記録する
+
+
+ファイルに変更されて、かつステージにもその変更が反映される
+git mv <旧ファイル> <新ファイル>
+
+# 以下のコマンドと同じ
+mv <旧ファイル> <新ファイル>
+git rm <旧ファイル>
+git add <新ファイル>
+
+ファイルを移動すると古いファイル名が削除され、新しいファイルが作成された
+のと同じ状態。
+
+・イメージ
+
+
+
+ワークツリーにindex.htmlがあるとしてステージにも反映されているとする。
+git mvでワークツリーのindex.htmlをindex2.htmlに変更しステージの方にもインデクスにindex2.htmlに
+変更
+
+・実践
+
+
+
+$ ls
+index.html
+⇒
+git mv index.html index2.html
+⇒
+$ ls
+結果：
+index2.html
+⇒
+$ git status
+結果：
+On branch master
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+
+        renamed:    index.html -> index2.html
+※ステージに追加された変更があるよ。
+それがファイル名が変更されてindex.html -> index2.html
+
+・元のファイル名に戻す
+
+
+
+git mv index2.html index.html
+⇒
+$ ls
+結果：
+index.html
+⇒
+$ git status
+結果；
+On branch master
+nothing to commit, working tree clean
+
+・PUSH
+
+
+
+■リモートリポジトリにアップすることをPUSH
+と呼ぶ
+普段の内容ではコミットしたら、その内容をGitHubにアップする。
+
+・PUSHする前に
+
+
+
+■リモートリポジトリを新規追加する
+git remote add orign "GitHubのURL"
+※orignというショートカットでurlのリモートリポジトリを登録するよ。
+今後はorignという名前でGitHubリポジトリにアップしたり、取得したりできる。
+git remote addでリモートリポジトリを登録しておかなかった場合、GitHubリポジトリにアップ
+するときに、GitHubリポジトリのURLを記載する必要が出てきて大変面倒。
+git remote addでURLを登録しておけば、そのあとはorignという名前でアップできる。
+なぜorignかはGITの慣用句。git cloneをしたときにClone元のリモートリポジトリを
+オリジンというショートカットに割り当てている。
+そのためメインのリモートリポジトリのことをオリジンという名前をつける。
+
+・リモートリポジトリを新規追加したら
+
+
+
+リモートリポジトリへ送信する。
+git push <リモート名> <ブランチ名>
+例
+git push orign master
+※ローカルリポジトリの内容をリモートリポジトリに送ることを
+「プッシュ」という。
+masterはデフォルトのブランチ名。
+
+アカウント登録したGitHubのRepositoriesタブをクリック後、Newボタンを押して
+新規作成する。
+リポジトリ名は今回は「git_tutorial」にする。その後、Create repositoryボタン
+を押す。これでGitHub上にリポジトリが作成。
+画面に「…or push an existing repository from the command line」
+とあるところの
+git remote add origin https://github.com/ユーザー名/git_tutorial.git(今回使用するGitHubのURL)
+をコピー。
+git bashで
+cd C:/Documents/udemy_code/git_tutorial
+の後、
+git remote add origin https://github.com/ユーザー名/git_tutorial.git
+※これで登録ができる。
+そして、GitHubにプッシュ
+git push -u origin master
+※このオプションをつけておくとorign masterをプッシュするときにgit push
+だけでプッシュできるもの。
+初回にプッシュするときにだけやると今後、楽になる。
+⇒
+上手くいって入れば、GitHubの画面ページでちゃんと表示されている。
+
+・画面の見方
+
+
+
+■git_tutorialをクリックし、index.htmlの右側にある「git diffを追記」は最新のコミットメッセージ。
+index.htmlをクリックして、Rawボタンを押すと、コピペするときに便利)
+■Blameボタン
+Blameというのは責任者という意味。ファイルに対して、いつ何のために変更したのか
+1行1行分かる。
+例
+initial commit  3 days ago  1 <h1>Gitチュートリアル</h1>
+■Historyボタン
+ファイルのコミットの履歴を追うことが出来る。個別ファイルのコミットの履歴。
+■<>Codeタブクリック後のCommitsボタン
+プロジェクト自体のコミットの履歴を確認することができる。
+⇒
+新規のファイル作成やファイルのアップロードは画面のGIThub上でもやっていいが
+普段開発するときはローカルで新規ファイルを作成し、git pushでプッシュすることが
+一般的
+
+・コマンドにエイリアス
+
+
+
+コマンドの入力を短縮して入力するのを楽にするために行うもの。
+毎回、git statusやgit commitと打つのは長くてめんどくさい。
+それに別名をつけるので楽にしよう。
+git config --global alias.ci commit ※コミットというコマンドにciを割り当てている
+git config --global alias.st status
+git config --global alias.br branch
+git config --global alias.co checkout
+※git configは設定を変更するコマンド。
+--globalをつけるとPC全体の設定を変更するコマンド(.gitconfigや.config/git/configファイルに設定が変更される)
+--globalをつけないと「project/.git/config」の方に設定が反映される。
+
+・バージョン管理しないファイルは無視
+そもそもバージョン管理したくないファイルとはどのようなファイルか
+
+
+
+■パスワードなどの機密情報が記載されたファイル。
+■チームの開発で必要のないファイル
+例えば、WindowsやMacで自動生成されるファイルやキャッシュ。
+チーム開発では必要ない。
+
+・管理しないファイルをGitの管理から外す
+
+
+
+.gitignoreファイルにそのファイル名を指定すること。
+# 指定したファイルを除外
+index.html
+# ルートディレクトリを指定　※スラッシュから書き始めること
+/root.html
+# ディレクトリ以下を除外　
+dir/
+# /以外の文字列にマッチ「*」
+/*/*.css
+
+・実践
+
+
+
+まず新規ファイル作成
+$ touch secret.txt
+※touchで空ファイルを作成する
+$ ls
+⇒
+$ git status
+結果：
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+        secret.txt
+
+nothing added to commit but untracked files present (use "git add" to track)
+
+⇒
+中身をsecret.txtにしてファイル名を「.gitignore」にしたものをAtomで作る。
+⇒
+$ git status
+結果：
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+        .gitignore
+
+nothing added to commit but untracked files present (use "git add" to track)
+⇒
+せっかくなのでコミット
+$ git add .
+$ git commit
+

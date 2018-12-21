@@ -1,0 +1,280 @@
+▲もう怖くないGIT⑩(タグ、タグの一覧表示、タグのデータ詳細表示、タグをリモートに送信、作業を一時避難、一時避難した作業を復元、一時避難した作業を削除)
+・タグ
+
+
+
+コミットを参照しやすくするために分かりやすい名前を付けるのがタグ。(commmitのid(ユニーク)は長く管理しづらいので、タグ名で管理できる)
+よくリリースポイントに使う。
+例えば20170531にリリースした場合、リリースしたコミットに20170531という名前を
+つけておく。
+そうすると0531にリリースしたコミットというのが名前を見ればすぐに分かる。
+リリースした後にバグが起きた場合、その時も、前回のリリースポイントに名前が
+ついていたらすぐそれをデプロイしておけばすぐ切り戻し出来る。
+
+・タグの一覧を表示する
+
+
+
+git tag
+# パターンを指定してタグを表示(-lで絞り込み、201705とついているやつのみ)
+git tag -l "201705"
+20170501_01 ※コミット1
+20170501_02
+20170503_01 ※コミット3
+※git tagコマンドはアルファベット順にすべてのタグを表示
+01が5月1日に1回目にリリースしたリリースポイント
+02が5月2日に1回目にリリースしたリリースポイント
+
+・タグには2種類ある
+
+
+
+注釈付き(annotated)版と軽量(lightweight)版の2種類がある。
+注釈付きが正式なタグでしっかりと情報がついたタグ
+軽量は情報量を減らした省略形式のタグ
+
+・注釈付きタグ
+
+
+
+git tag -a [タグ名] -m "[メッセージ]"
+例
+git tag -a 20170520_01 -m "version 20170520_01"
+※-aはannotateの略。注釈付きタグを作成
+-mはメッセージの略。エディタを立ち上げずにメッセージを入力できる。
+注釈付きタグは名前、コメント、タグをつけた人の署名をつけれる
+
+・軽量版タグ
+
+
+git tag [タグ名]
+例
+git tag 20170520_01
+※軽量版タグは名前しかつかない
+
+上記は今いるブランチの最新のコミットにタグをつけるやり方。
+# 昔のコミットに後からタグをつけるやり方
+git tag [タグ名] [コミット名]
+git tag 20170520_01 8a6cbc4
+
+・タグのデータ詳細を表示する
+
+
+
+git show [タグ名]
+例
+git show 20170520_01
+※タグのデータと関連づけられたコミットを表示
+・タグ付けした人のメッセージ
+・タグ付けした日時
+・注釈メッセージ
+・コミット
+
+・実践
+注釈付きタグ
+
+
+
+
+$ cd C:/~/udemy_code/git_tutorial
+⇒
+$ git tag -a "20170528" -m "version 20170528"
+⇒
+$ git tag
+結果：
+20170528
+⇒
+$ git show 20170528
+結果：
+tag 20170528
+Tagger: タグをつけた人の名前 <メールアドレス>
+Date:   Thu Dec 20 15:59:26 2018 +0900
+
+version 20170528
+
+commit ~ (HEAD -> master, tag: 20170528,origin/master)
+Author: 
+Date:   Wed Dec 19 00:23:51 2018 +0900
+
+    feature2を新規作成
+～
+※タグ名、タグをつけた人の名前、日付、タグのメッセージが表示されている。
+その下はコミットの情報
+紐づけられたコミットID
+commit ~
+
+・タグをリモートに送信するやり方
+
+
+
+git pushコマンドで別途指定する。
+※git push origin materのコマンドではタグは送信されない。
+⇒
+git push [ブランチ名][タグ名]
+例
+git push origin 20170520_01
+
+# タグを一斉に送信する
+git push origin --tags
+※tagsを付けるとローカルにあってリモートリポジトリに存在しないタグを
+一斉に送信する。
+
+・実践
+
+
+
+$ git tag
+結果：
+20170528
+⇒
+$ git push origin 20170528
+⇒
+GUIのGitHubでgit_tutorialの画面のreleaseタグをクリック
+Tagsをクリック
+先ほどのタグが表示されていることを確認
+タグ名をクリックすると詳細の情報が表示されて、タグの状態のソースコードをダウンロード
+もできる。
+
+・作業を一時避難するやり方
+
+
+
+作業が途中でコミットしたくないけど別のブランチで急遽作業しないといけない。
+そういう時に作業を一時避難する。
+git stash
+git stash save
+※saveは省略可能。stashは「隠す」という意味
+変更分をstashというところに一時格納させる
+
+・実践
+何かファイルを変更してgit stashで一時避難
+
+
+
+$ git status
+結果：
+On branch master
+nothing to commit, working tree clean
+⇒
+$ ls
+結果：
+feature.html   home.html   master.html   secret.txt
+feature2.html  index.html  master2.html
+⇒
+home.htmlを手で修正
+<p>git stash</p>を追記
+⇒
+$ git stash
+結果：
+Saved working directory and index state WIP on master: ~～
+※ワークツリーとステージの状態を保存したよと出てくる。
+これで別の場所に一時避難出来ている。
+⇒
+$ git status
+結果：
+On branch master
+nothing to commit, working tree clean
+⇒
+home.htmlのファイルを開いても先ほど変更した分がなかったことになっている
+
+・避難した作業を確認する
+
+
+
+$ git stash list
+※避難した作業に一覧を表示するよ
+
+・実践
+
+
+
+$ git stash list
+結果：
+stash@{0}: WIP on master: adf2e87 feature2を新規作成
+
+・一時避難した作業を復元する
+
+
+
+# 最新の作業を復元する
+git stash apply ※これだけだとステージの状況は復元されない
+# ステージの状況も復元する
+git stash apply --index
+
+# 最新ではなく、特定の作業を復元する
+git stash apply [スタッシュ名]
+例
+git stash apply stash@{1}
+
+・実践
+
+
+
+$ git status
+結果：
+On branch master
+nothing to commit, working tree clean
+⇒
+$ git stash apply
+結果：
+On branch master
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+        modified:   home.html
+
+no changes added to commit (use "git add" and/or "git commit -a")
+※復元できた
+⇒
+home.htmlの中を見てみると
+<p>git stash</p>がちゃんとある
+
+・一時避難した作業を削除
+
+
+
+# 最新の一時避難した作業を削除する
+git stash drop
+
+# 特定の一時避難した作業を削除する
+git stash drop [スタッシュ名]
+例
+git stash drop stash@{1}
+
+# 一時避難した全作業を削除する
+git stash clear
+
+・実践
+
+
+
+$ git stash list
+結果：
+stash@{0}: WIP on master: ~ feature2を新規作成
+※1つ避難した作業があることを確認
+⇒
+$ git stash drop
+Dropped refs/stash@{0} (~)
+⇒
+ほんとに削除できたかの確認
+$ git stash list
+※何も表示されないことを確認
+⇒
+ワークツリーの掃除
+$ git status
+結果：
+On branch master
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+        modified:   home.html
+⇒
+上記の変更を取り消し
+$ git checkout home.html
+⇒
+$ git status
+結果：
+On branch master
+nothing to commit, working tree clean

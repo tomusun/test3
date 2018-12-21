@@ -1,0 +1,352 @@
+〇もう怖くないGIT②(現在の変更状況を確認と裏側、変更差分を確認する、変更履歴の確認)
+〇ほかの人がすでに作成しているプロジェクトから始める場合
+どのようにやるかというと
+
+
+
+他の人が作成したGitリポジトリのコピーを自分のローカルに作成する。
+git clone <リポジトリ名>
+※クローン(コピーを)作成するよ
+
+〇git cloneコマンドを打つと
+
+
+
+2つのものがローカルにコピーされる。
+1,リモートリポジトリのファイルがローカルのワークツリーにコピーされる。
+2,.gitディレクトリがコピーされる。
+
+〇外部リポジトリからローカルにコピー
+
+
+
+例
+GitHubでatomで検索して
+atom/atomをクリックし
+「Clone or download」でURLをコピー。
+⇒
+git bashで
+$ cd ～
+⇒
+$ git clone https://github.com/atom/atom.git
+コピーが完了したらAtomの中身を見てみる
+ls -a
+そうすると
+Atomプロジェクトのファイルが自分のワークツリーにコピーされることを確認。
+GITリポジトリもにコピーされることを確認。
+このようにgit cloneで自分のローカルにコピーできる
+
+〇自分のGITHUBで試し
+
+
+
+$ cd C:/Documents/udemy_code
+$ git clone https://github.com/ユーザー名/test3.git
+C:\Documents\udemy_code
+の直下に
+test3のフォルダができ、中身もある
+
+・cloneしたtest3の方でPUSHなどやってみる
+
+
+
+ワークツリーに新規ファイル格納
+$ git add .
+$ git commit -m "GIT1追加"
+$ git push origin master
+※ちゃんとファイルがGITHUBに上がっていることを確認
+
+〇変更をステージに追加する
+
+
+
+git add <ファイル名>
+git add <ディレクトリ名>
+git add .
+ワークツリーの変更全てをステージに追加したいときは、「git add .」
+
+〇現在のディレクトリの位置を表示する
+
+
+
+pwd
+
+〇/c/～/udemy_code/git_tutorial
+の直下にある
+index.htmlをステージに追加
+
+
+
+$ cd C:/～/udemy_code/git_tutorial
+⇒
+$ ls　※ファイルがちゃんと存在しているか確認
+結果：index.html
+⇒
+$ git add .
+
+〇ステージに追加せずにいきなりコミットすると
+$ git commit
+
+
+
+$ git commit
+結果：
+On branch master
+
+Initial commit
+
+Untracked files:
+        index.html
+
+nothing added to commit but untracked files present
+※コミットするもんはないよ！
+　でも、管理されてないファイルがあるよ
+
+〇ステージに追加したものをGITレポジトリに上げる
+
+
+
+変更を記録する
+git commit　※GITのエディタが立ち上がってメッセージ付きで記録する。
+git commit -m <メッセージ>　※GITのエディタが立ち上げることなくメッセージ付きで変更を記録することができる
+git commit -v ※※GITのエディタが立ち上がってファイルの変更内容をエディタ上で確認することができる。
+例
+git commitとするとGITのエディタが立ち上げる
+initial commitを入力して
+保存し、閉じる
+⇒
+ターミナルに戻ると
+$ git commit
+
+〇分かりやすりコミットメッセージを書くこと
+
+
+
+■簡単に書く時
+変更内容の要点と理由を1行で簡潔に書く。 
+■正式に書く時
+1行目：変更内容の要約
+2行目：改行
+3行目；変更した理由
+※チームでコミットメッセージをちゃんと書いて開発していくときやオープンソース
+にコミットするときはおすすめ
+
+〇現在の変更状況を確認する
+
+
+
+基本的に開発するとき、どのファイルが変更されたかを確認してからコミットやステージに追加していく。
+⇒
+git status
+※変更されたファイルを確認することができる。
+ワークツリーとステージの間で変更されたファイル
+ステージとリポジトリの間で変更されたファイル
+をそれぞれを表示してくれる。
+
+〇git statusの裏側
+
+
+
+index.htmlをコミットしての想定
+▼git statusはワークツリーとステージの間で変更されたファイルを表示する
+⇒前回ステージに追加してから変更したワークツリーのファイルを表示しているということ
+git addするとステージにインデックスファイルが追加され、そのためインデクスの情報と
+今のワークツリーの情報とを見比べれば、前回ステージに追加した後に変更された
+ファイルが分かるという仕組み
+▼git statusはステージとリポジトリの間で変更されたファイルを表示する
+⇒前回コミットしてからステージに追加されたファイルということ。
+コミットには前回コミットした時点でのスナップショットとしての情報が保存
+されている。
+前回コミットしたときのスナップショットとステージのインデックスの情報を比較
+すれば前回コミットした後にステージに追加されたファイルが分かる。
+
+〇流れ
+
+
+
+index.html
+<h1>Gitチュートリアル</h1>
+<p>git status</p> ←追記してみる
+
+git statusコマンドを打つと
+$ git status
+On branch master
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+        modified:   index.html
+
+no changes added to commit (use "git add" and/or "git commit -a")
+⇒ステージに追加されていない変更があるよと出ている。
+index.htmlが変更されたよと出ている
+
+ステージに追加していく
+git add index.html
+そして
+$ git statusを叩くと
+$ git status
+On branch master
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+
+        modified:   index.html
+⇒
+コミットすべき変更があるよと出ている
+つまりステージに追加したけとまだコミットしていない変更があるよ。
+
+git commit
+エディタが立ち上がるので
+「git statusコマンドを追記」と入力し、閉じる。
+⇒
+$ git commit
+hint: Waiting for your editor to close the file...
+[master 91b2084] git statusコマンドを追記
+ 1 file changed, 1 insertion(+)
+⇒1ファイル変更されて、1行挿入されたよ
+
+$ git statusを打つと
+On branch master
+nothing to commit, working tree clean
+⇒コミットすべき変更は何もないよ
+ワークツリーとコミットの間に変更差分はない状態。
+このように、ファイルを変更したらgit statusコマンドを打って、何のファイルが変更
+されたか確認してからgit addやgit commitをしていく癖をつける。
+
+〇コミットやステージに追加する前にどんな変更したかを確認
+変更差分を確認する
+
+
+
+※diffはdifferenceの略
+■// git addする前の変更分(ワークツリーとステージの変更分を確認する)
+git diff
+git diff <ファイル名>
+■// git addした後の変更分(ステージとリポジトリの変更分を確認する)
+git diff --staged
+※ステージしたけどまだコミットしてない分の変更分を確認する
+
+〇git diffコマンドの裏側で起こっていること
+
+
+
+index.htmlがあったとしてコミットしたところを想定。
+■ステージにはインデクスに前回git addしたときのスナップショットが保存されているので
+そのスナップショットとワークツリーの情報の変更差分をgit diffで表示している。
+■前回コミットしたときのスナップショットが保存されているのでコミットのスナップショット
+とステージのスナップショットを比較してその違いをgit diff --stagedで表示している
+
+〇git diff
+をして何も変化ないときは
+
+
+
+変更されていないということ
+
+〇git diff実践
+
+
+
+■index.html
+<h1>Gitチュートリアル</h1>
+<p>git status</p>
+<p>git diff</p>←追記
+⇒
+$ git diff
+diff --git a/index.html b/index.html
+index a66864d..47028db 100644
+--- a/index.html
++++ b/index.html
+@@ -1,2 +1,3 @@
+ <h1>Gitチュートリアル</h1>
+ <p>git status</p>
++<p>git diff</p>
+※変更した差分が表示されている。
+⇒
+変更分をステージに追加してみる
+git add index.html
+⇒
+$ git diff
+と打っても何も表示されない。
+※「git diff」はステージとワークツリーの変更差分だから。
+今回、git addしたことでステージとワークツリーには何の差分もなくなった。
+⇒
+$ git diff --staged
+diff --git a/index.html b/index.html
+index a66864d..47028db 100644
+--- a/index.html
++++ b/index.html
+@@ -1,2 +1,3 @@
+ <h1>Gitチュートリアル</h1>
+ <p>git status</p>
++<p>git diff</p>
+※<p>git diff</p>は追加したよと分かる
+⇒
+git commitを打って
+git diffを追記
+
+※実際、開発をするときはこのようにステージに追加する前やコミットする前に
+git diffコマンドを実行して何の変更をしたのかというのを確認してステージに
+追加したり、コミットする癖をつけること。
+
+〇変更履歴の確認
+以前どのような変更があったのかと昔のことを調べたいとき
+
+
+
+git log
+と打つだけで今までの変更履歴を見ることが出来る。
+基本的にはgit logで大丈夫だが
+表示を便利にするオプションが下記
+# 一行で表示する
+git log --online
+
+# 特定ファイルの変更差分を表示する
+git log -p index.html
+
+# 表示するコミット数を制限する。最近の変更履歴に絞って表示することができる。
+git log -n <コミット数>
+
+例
+コミット1(一番古い)
+|
+コミット2
+|
+コミット3(一番新しい)
+⇒
+git logと打つと最近のコミット履歴を順にたどる
+
+〇git logコマンドの裏側で起きていること
+
+
+
+index.htmlを新規作成した後、一度コミットしてその後2回変更してそれぞれ2回コミット
+コミット3はコミット2を親コミットとしてコミット2はコミット1を親コミットとして保存している。
+git logコマンドを打つと、コミット3とコミット2との変更履歴。
+そして、コミット2とコミット1との変更履歴を表示。
+
+〇コマンド実践
+
+
+
+$ git log
+commit ～ (HEAD -> master) 
+Author: 作者名 <自分のアドレス>
+Date:   Wed Dec 12 00:37:57 2018 +0900
+
+    git diffを追記
+
+commit ～
+Author: 作者名 <自分のアドレス>
+Date:   Tue Dec 11 22:23:38 2018 +0900
+
+    git statusコマンドを追記
+
+commit ～
+Author: 作者名 <自分のアドレス>
+Date:   Tue Dec 11 21:37:34 2018 +0900
+
+    initial commit
+※commit ～
+はIDのようなもの
+Dateはコミットした日付

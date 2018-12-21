@@ -1,0 +1,372 @@
+▲もう怖くないGIT⑥(ブランチを切替、変更をマージ、マージ種類、コンフリクト、コンフリクト関連の事故が起きにくい運用ルール)
+・ブランチを切り替える
+
+
+git checkout <既存ブランチ名>
+git checkout feature
+# ブランチを新規作成して切り替える
+git checkout -b <新ブランチ名>
+※-bはブランチの略
+-bをつけるとブランチの作成と切替を一度にしてくれる。
+
+・実践
+
+
+$ git branch
+結果：
+  feature
+* master
+⇒
+featureブランチの方に移動
+$ git checkout feature
+結果：
+Switched to branch 'feature'
+⇒
+$ git branch
+結果：
+* feature
+  master
+⇒
+中身が<p>branch</p>のfeature.htmlファイルを作成し、git_tutorialフォルダ直下に
+格納。
+⇒
+$ git status
+On branch feature
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+        feature.html
+⇒
+$ git add .
+⇒
+$ git commit
+⇒
+masterブランチに変更
+git checkout master
+⇒
+$ ls
+結果：
+home.html  index.html  secret.txt
+※feature.htmlが存在していないことに着目。
+分岐して開発が進められていることを確認。
+⇒
+中身が<p>master</p>のmaster.htmlファイルを作成し、git_tutorialフォルダ直下に
+格納。
+⇒
+$ ls
+結果：
+home.html  index.html  master.html  secret.txt
+⇒
+$ git add master.html
+⇒
+GITHUBにもアップ
+git push origin master
+⇒
+featureブランチもGITHUBにもアップ
+$ git checkout feature
+$ git push origin feature
+※git_tutoriaに新しくfeatureブランチが出来ている
+GUIのGITHUBで確認
+
+・変更をマージしていく
+
+
+
+マージとは他の人の変更内容を自分のブランチに取り込む作業
+git merge <ブランチ名>
+git merge <リモート名>
+例
+git merge origin/master
+※作業中のブランチにマージする
+
+現在
+master：23q1a
+feature:rf54h
+⇒
+featureブランチの内容をmasterブランチにマージしていく。
+git merge feature
+masterブランチの内容にfeatureブランチの内容が統合されて、その新しく統合されたコミットができる。
+master:6847g
+「6847g」は元々のmasterブランチの内容をベースにfeatureブランチの変更分を取りこんだ内容になる。
+
+・マージには3種類ある
+
+
+
+■Fast Forword:早送りになるマージ
+master
+コミット
+a6923
+⇒
+緊急のバグ修正対応でhotfixブランチを作成してコミット23q1aで修正内容を
+masterブランチに取り込み(git merge hotfix)
+すると、masterブランチの指すコミットファイルが23q1aを指すようになる。
+※ブランチが枝分かれしていなかったとき(masterブランチの先のhotfixブランチ)は
+ブランチのポインタを前に進めるだけ。
+■Auto Merge:基本的なマージ
+master：23q1a
+feature:rf54h
+featureブランチの変更をmasterブランチに取り込む(git merge feature)
+新しいコミットファイルができる
+master:6847g(マージのコミットファイル)
+※枝分かれして開発していた場合、マージコミットという新しいコミットを作る。
+6847gが通常のコミットファイルと違うところは通常のコミットファイルは自分の親が1つの親のコミットファイルしか
+持っていない。マージのコミットファイルは親を2つ持っている。
+今回でいうと23q1aとrf54hのコミットファイルを親に持っている。
+■コンフリクト
+
+・実践
+Fast Forword
+
+
+
+他の人がmasterブランチの内容に変更加えたという設定。
+GUIでindex.htmlを修正
+<p>git merge</p>を追記
+※ほかの人がmasterブランチの内容を変更したと再現
+その内容を自分のワークツリーの方に取り込んでいく
+⇒
+$ git pull origin master
+結果：
+remote: Enumerating objects: 5, done.
+remote: Counting objects: 100% (5/5), done.
+remote: Compressing objects: 100% (3/3), done.
+remote: Total 3 (delta 2), reused 0 (delta 0), pack-reused 0
+Unpacking objects: 100% (3/3), done.
+From https://github.com/ユーザー名/git_tutorial
+ * branch            master     -> FETCH_HEAD
+   ~..~  master     -> origin/master
+Updating ~..~
+Fast-forward
+ index.html | 1 +
+ 1 file changed, 1 insertion(+)
+※マージするときにFast-forwardしたよと表示されている
+⇒
+ちゃんとマージ出来ているか確認
+$ cat index.html
+結果：
+<h1>Gitチュートリアル</h1>
+<p>git status</p>
+<p>git diff</p>
+<p>git commit --amend</p>
+<p>git merge</p>
+⇒
+ほんとにFast Forwordされているのか確認
+$ git log --oneline
+結果：
+~ git mergeを追記　※GITHUB上で修正したコミット
+~ master.htmlを新規作成
+~ Update home.html
+~ Create home.html
+~ git commit --amendを追記
+~ .gitignoreファイルを追加
+~ git diffを追記
+~ git statusコマンドを追記
+~ initial commit
+
+・実践
+Auto Merge
+
+
+
+$ git branch
+結果：
+  feature
+* master
+※Auto Mergeを確認するためにfeatureブランチに修正を加えていく。
+⇒
+ブランチの切替
+$ git checkout feature
+⇒
+feature.htmlにATOMで
+<p>branch</p>
+<p>feature</p>←追記
+⇒
+変更分をコミットしていく
+$ git add feature.html
+$ git commit
+結果：
+hint: Waiting for your editor to close the file...
+[feature ~] featureを追記
+ 1 file changed, 1 insertion(+)
+⇒
+featureブランチの内容をマスターブランチに取り込む
+$ git checkout master
+$ git merge feature
+※エディタが立ち上がってメッセージはMerge branch 'feature'とする
+結果：
+hint: Waiting for your editor to close the file...
+Merge made by the 'recursive' strategy.
+ feature.html | 2 ++
+ 1 file changed, 2 insertions(+)
+ create mode ~ feature.html
+※これがAuto Mergeしたときのメッセージ
+⇒
+ほんとにマージできたか確認
+$ ls
+結果：
+feature.html  home.html  index.html  master.html  secret.txt
+⇒
+$ cat feature.html
+結果：
+<p>branch</p>
+<p>feature</p>
+⇒
+マージコミットが出来ているか確認
+$ git log --oneline
+結果：
+~ (HEAD -> master) Merge branch 'feature'
+~ (feature) featureを追記
+~ (origin/master) Update index.html
+~ master.htmlを新規作成
+~ (origin/feature) feature.htmlファイルを新規追加
+~ Update home.html
+~ Create home.html
+~ git commit --amendを追記
+~ .gitignoreファイルを追加
+~ git diffを追記
+~ git statusコマンドを追記
+~ initial commit
+
+・コンフリクト
+
+
+
+複数人の人が同じ個所で別々の変更をしたとき、どの変更を優先していいか分からないという状態。
+同じファイルの同じ行に対して異なる編集を行ったときに発生。
+master：23q1a ※index.htmlの5行目を変更
+feature:rf54h ※index.htmlの5行目を変更
+⇒
+masterブランチにfeatureブランチの内容を取り込もうとするとコンフリクト発生。
+どっちの内容を優先したいのかGITは判断できないのでコンフリクト。
+
+・コンフリクトの解決の仕方
+
+
+
+●コンフリクトしたファイル
+<h1>Gitチュートリアル</h1>
+<p>ようこそ</p>
+<<<<<<< HEAD
+<p>git addについて</p>
+=======
+<p>git commitを知ろう</p>
+>>>>>>> feature
+※HEADというのは自分の作業しているブランチの内容
+<< HEAD～＝：HEADの変更分
+==～>> feature:featureの変更分
+⇒
+解決するには最終的なファイル内容を記載すればOK
+<h1>Gitチュートリアル</h1>
+<p>ようこそ</p>
+<p>git addについて</p>
+<p>git commitを知ろう</p>
+※
+①ファイルの内容を書き換える
+②「<<」「==」「>>」の記述を削除する
+
+・コンフリクト実践
+
+
+
+●index.html ※Atomで修正
+<h1>Gitチュートリアル</h1>
+<p>git status</p>
+<p>git diff</p>
+<p>git commit --amend</p>
+<p>git merge</p>
+<p>コンフリクト</p>←追記
+⇒
+$ git add index.html
+⇒
+$ git commit
+結果：
+hint: Waiting for your editor to close the file...
+[master ~] コンフリクトを追記
+ 1 file changed, 1 insertion(+)
+⇒
+featureブランチの方に修正を加えていく
+$ git checkout feature
+●index.html ※Atomで修正
+<h1>Gitチュートリアル</h1>
+<p>git status</p>
+<p>git diff</p>
+<p>git commit --amend</p>
+<p>conflict</p>←追記
+⇒
+$ git add index.html
+$ git commit
+結果：
+hint: Waiting for your editor to close the file...
+[feature ~] conflictを追記
+ 1 file changed, 1 insertion(+)
+⇒
+$ git checkout master
+⇒
+featureブランチの内容をマージ
+$ git merge feature
+結果：
+Auto-merging index.html
+CONFLICT (content): Merge conflict in index.html
+Automatic merge failed; fix conflicts and then commit the result.
+※コンフリクトが起きてオートマージが失敗している。
+⇒
+どのファイルがコンフリクト起きているかというと
+$ git status
+結果：
+On branch master
+You have unmerged paths.
+  (fix conflicts and run "git commit")
+  (use "git merge --abort" to abort the merge)
+
+Unmerged paths:
+  (use "git add <file>..." to mark resolution)
+
+        both modified:   index.html
+
+no changes added to commit (use "git add" and/or "git commit -a")
+※index.htmlと記載あり。index.htmlに対して両方の変更を加えたよ。
+⇒
+Atomでindex.htmlを開くと
+<h1>Gitチュートリアル</h1>
+<p>git status</p>
+<p>git diff</p>
+<p>git commit --amend</p>
+<<<<<<< HEAD
+<p>git merge</p>
+<p>コンフリクト</p>
+=======
+<p>conflict</p>
+>>>>>>> feature
+となっている
+⇒
+<h1>Gitチュートリアル</h1>
+<p>git status</p>
+<p>git diff</p>
+<p>git commit --amend</p>
+<p>git merge</p>
+<p>conflict</p>
+で保存
+⇒
+$ git add index.html
+⇒
+$ git commit
+結果：
+hint: Waiting for your editor to close the file...
+[master 850115f] Merge branch 'feature'
+※コンフリクトが発生してもファイルの内容をもう一度きれいにしてあげればコンフリクトは解決できる。
+
+・コンフリクト関連の事故が起きにくい運用ルール
+
+
+
+■複数人で同じファイルを変更しない。
+■pullやmergeする前に変更中の状態をなくしておく(commitやstashをしておくと変更中のファイルの状態をなくすことができる)
+※stashは変更中のファイルを一時保管しておくコマンド
+なぜ変更中のファイルがあったらよくないのか
+⇒変更中のファイルがあってpullやmergeをした場合、変更中のファイルとpullやmergeしたファイルがダブルと
+pullやmergeができなくなることがある。pullやmergeをしてエラーが起きた場合は、今変更しているファイルがないか確認すること。
+■pullするときは、pullするブランチに移動してからpullする。
+例えば、masterブランチをpullする場合、今いるブランチからmasterブランチに移動してから、git pull orgin master
+を実行するようにすること。
+なぜかというと、git pullしてきたブランチの内容が今いる自分のブランチの内容にマージしてしまうから。

@@ -1,0 +1,306 @@
+▲もう怖くないGIT④(ファイルへの変更取消、裏側、ステージした変更取消、直前のコミット修正、リモートを表示、originとは別のリポジトリを登録)
+・ファイルへの変更を取り消すやり方
+
+
+
+ファイルの中がぐちゃぐちゃになって元に戻したい。
+ワークツリーのファイルを元に戻したいとき。
+git checkout -- <ファイル名>
+git checkout -- <ディレクトリ名>
+
+# 全変更を取り消す
+git checkout -- .(ピリオド ※任意のファイル全てという意味)
+※--をつけているのは、ブランチ名とファイル名が被った時に、
+どちらを指しているのかGitが分からなくなるのを避けるため。
+※git checkoutコマンドはブランチの変更の時にも使うコマンド。
+
+・裏側では
+
+
+
+ワークツリーの状態をステージの状態と同じにしている。
+まずステージからgit checkoutで指定されたファイルの情報を取得
+してくる。取得してきた情報をワークツリーに反映させている
+。
+
+・実践
+
+
+
+index.htmlの中身を修正
+cd C:/～/udemy_code/git_tutorial
+git status
+⇒index.htmlが変更されたと出てくる
+git checkout -- index.html
+$ git status
+結果：
+On branch master
+Your branch is ahead of 'origin/master' by 1 commit.
+  (use "git push" to publish your local commits)
+
+nothing to commit, working tree clean
+※変更は何もないと出る。
+先ほどindex.htmlに追記した内容はなくなっていることを確認。
+
+・ステージした変更を取り消すやり方
+ステージに追加した変更を元に戻したいとき
+git addで追加した分が間違っていた。
+
+
+
+git reset HEAD <ファイル名>
+git reset HEAD <ディレクトリ名>
+# 全変更を取り消す
+git reset HEAD .
+※指定した変更をステージから取り消すだけなので、ワークツリーのファイル(ローカルのファイル)
+には影響を与えない。
+もし、ワークツリーのファイルの変更を取り消したい場合は、
+git reset HEADをしてその後に、checkoutコマンドでワークツリーのファイルの
+変更を取り消す。
+
+・裏側で起こっていること
+
+
+
+リポジトリから最新のコミットの情報を取ってきて、その情報でステージの
+内容を上書きするとうことをしている。それでステージに変更した変更分を取り消している
+HEADは今、自分がいるブランチの最新のコミットのこと。
+
+・実践
+
+
+
+index.htmlの中身を修正
+⇒
+cd C:/～/udemy_code/git_tutorial
+⇒
+git status
+結果：
+$ git status
+On branch master
+Your branch is ahead of 'origin/master' by 1 commit.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+～
+        modified:   index.html
+※index.htmlが変更されたよと出ている。
+⇒
+git add .
+⇒
+$ git status
+On branch master
+Your branch is ahead of 'origin/master' by 1 commit.
+  (use "git push" to publish your local commits)
+
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)←ステージから取り消したい場合はgit resetコマンドを使ってね
+
+        modified:   index.html
+※コミットすべき変更があるよ。
+⇒
+$ git reset HEAD index.html
+結果：
+Unstaged changes after reset:
+M       index.html
+※変更をステージから取り消したよ。
+⇒
+$ git status
+結果：
+On branch master
+Your branch is ahead of 'origin/master' by 1 commit.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+        modified:   index.html
+※ステージしていない変更があるよ。
+ステージの変更は取り消されたけどワークツリーの変更はそのまま。
+⇒
+$ git checkout -- index.html
+⇒
+$ git status
+結果：
+On branch master
+Your branch is ahead of 'origin/master' by 1 commit.
+  (use "git push" to publish your local commits)
+
+nothing to commit, working tree clean
+
+・直前のコミットを修正したいとき
+
+
+
+何か変更をコミットし忘れた、コミットメッセージを書き直したいなど。
+git commit --amend
+※amendは修正するという意味
+今のステージの状態を元に直前のコミットを作り直す、やり直す。
+今のステージの内容でコミットを上書きすることで直前のコミット
+を修正している。
+
+・注意点としてリモートリポジトリにプッシュしたコミットに関しては
+やり直してはいけない。
+
+
+
+Aさんがプッシュされたコマンドを自分のワークツリーに取り込んで
+何か作業をしていたとする。その状態で直前のコミットやり直したい
+と思ってgit commit --amendコマンドをしてもう一回プッシュした。
+リモートリポジトリの状態とAさんの履歴の状態が別のものになって
+しまう。するとAさんが変更を加えて統合しようと思ったときに
+履歴の状態が違うので取り込めないということが起こる。
+そのためリモートリポジトリにプッシュしたコミットに関しては
+絶対にそのコミットの内容を修正しないようにすること。
+もし、プッシュした後に、そのコミットをやり直したい場合は、
+amendコマンドではなく、git commitコマンドでもう一度新しい
+コミットを作ってその内容を修正すること。
+
+・実践
+
+
+
+<h1>Gitチュートリアル</h1>
+<p>git status</p>
+<p>git diff</p>
+<p>git commit</p>←追加。ほんとはgit commit --amendとしたかった
+⇒
+$ git add .
+⇒
+$ git commit
+⇒
+--amendを記載を忘れていた
+<h1>Gitチュートリアル</h1>
+<p>git status</p>
+<p>git diff</p>
+<p>git commit --amend</p>←修正
+⇒
+$ git add .
+⇒
+$ git status
+結果：
+On branch master
+Your branch is ahead of 'origin/master' by 2 commits.
+  (use "git push" to publish your local commits)
+
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+
+        modified:   index.html
+⇒
+$ git commit --amend
+結果：
+hint: Waiting for your editor to close the file...
+[master ～] git commit --amendを追記
+ Date: Sat Dec 15 13:46:59 2018 +0900
+ 1 file changed, 1 insertion(+)
+⇒
+ファイルの変更を見たいので
+git log -p -n 1
+※-n 1で直前のコミット
+Qを押すことで表示の終了をすることができる。
+$ git log -p -n 1
+結果：
+commit ～ (HEAD -> master)
+Author: ユーザー名 <～>
+Date:   Sat Dec 15 13:46:59 2018 +0900
+
+    git commit --amendを追記
+
+diff --git a/index.html b/index.html
+index 
+--- a/index.html
++++ b/index.html
+@@ -1,3 +1,4 @@
+ <h1>Gitチュートリアル</h1>
+ <p>git status</p>
+ <p>git diff</p>
++<p>git commit --amend</p>
+⇒
+$ git push origin master
+結果：
+Enumerating objects: 8, done.
+Counting objects: 100% (8/8), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (5/5), done.
+Writing objects: 100% (6/6), 659 bytes | 219.00 KiB/s, done.
+Total 6 (delta 0), reused 0 (delta 0)
+To https://github.com/ユーザー名/git_tutorial.git
+   0ccb11e..～  master -> master
+
+・リモートを表示する
+
+
+
+git remote
+# 対応するURLを表示
+git remote -v
+※設定しているリモートリポジトリの情報を表示する。
+git remoteと入力すると登録されているリモート名しか表示されないが
+それに対応するURLを表示したい場合、「git remote -v」。
+2つのリモートリポジトリが登録されていたとする。
+git remote
+2つのリモートリポジトリの名前が表示される。
+
+・実践
+
+
+
+$ git remote
+結果：
+origin
+※リモートにはoriginしか登録していないので。
+⇒
+$ git remote -v
+origin  https://github.com/ユーザー名/git_tutorial.git (fetch)
+origin  https://github.com/ユーザー名/git_tutorial.git (push)
+
+・リモートリポジトリを追加するやり方
+リモートリポジトリは複数登録することができる。
+
+
+
+■チーム開発とは別に自分でもリモートリポジトリを持っておきたい場合、
+複数のチームでやり取りをしていて複数のチームでそれぞれでリポジトリを持っている場合など。
+git remote add <リモート名>
+例
+git remote add tutorial https://github~
+※originとは別の名前でやることができる。
+tutorialというショートカットでURLのリモートリポジトリを登録
+
+・originとは別のリポジトリを登録
+
+
+
+■Gittutorialリポジトリのバックアップリポジトリを新規に作成してそれをgit remote addで追加する
+⇒
+GUIのGitからRepositoriesタブをクリック後、Newボタン押下
+git_tutorial_bakと入力
+⇒
+Quick setup ? if you’ve done this kind of thing beforeのURL：
+https://github.com/ユーザー名/git_tutorial_bak.git
+をコピー
+⇒
+git bashで
+$ git remote add bak https://github.com/ユーザー名/git_tutorial_bak.git
+⇒
+登録できているかの確認
+$ git remote
+結果：
+bak
+origin
+⇒
+$ git remote -v
+bak     https://github.com/ユーザー名/git_tutorial_bak.git (fetch)
+bak     https://github.com/ユーザー名/git_tutorial_bak.git (push)
+origin  https://github.com/ユーザー名/git_tutorial.git (fetch)
+origin  https://github.com/ユーザー名/git_tutorial.git (push)
+
+・$ git push -u bak master
+
+
+
+masterブランチの情報をプッシュしたので
+index.htmlがgit_tutorial_bakにも存在する状態
+※$ git push -u bak masterをやらないと「git_tutorial_bak」には何もない状態

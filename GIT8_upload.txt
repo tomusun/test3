@@ -1,0 +1,379 @@
+▲もう怖くないGIT⑧(リベース、リベースでしてはいけないこと、プルの設定をリベースに変更、リベースで履歴を書き換えるやり方)
+・リベース
+
+
+
+■変更を統合する際に、履歴をきれいに整えるために使うのがリベース
+変更を取り込むやり方にはマージ以外にもあって、そのやり方がリベース。
+git rebase <ブランチ名>
+※ブランチの基点となるコミットを別のコミットに移動する。
+⇒
+例えば、
+コミット1から
+コミット2のmasterブランチとコミット3のfeatureブランチが分岐しているとして、
+自身はfeatureブランチにいるとする。そして、最新のmasterブランチの内容を
+featureブランチに取り込みたいとする。
+今回はrebaseで取り込む(git checkout feature⇒git rebase master)
+すると、featureブランチがmasterブランチの前に移動する。
+コミット2←コミット3ダッシュ(feature)
+何が起きているかというと、今までコミット3の親コミットはコミット1であったが
+それがコミット2に変わった。今まであったコミット3は消える。
+コミット2の変更分がfeatureブランチに取り込まれた。
+mergeコマンドと違うところはただmasterブランチの変更分を取り入れているのではなく
+コミットの履歴を一直線にしている。
+rebaseコマンドを使うことで他のブランチの変更分を取り込みながら自分の中に取り込み
+ながら履歴をきれいに整えることが出来ている。
+
+・上記の状態で
+git checkout master
+git merge feature
+とすると
+
+
+
+masterブランチの指すコミットがコミット3ダッシュになる。(masterブランチにはfeatureブランチの変更分も取り込まれている)
+今回の状態だとマージしても新しいマージコミットは生まれない。
+featureブランチの指し示すコミット3ダッシュがコミット2の直接の子供だったので
+fast-forwardが起こっている。
+fast-forwardは自分の子のコミットのブランチの変更分を取り込むときにマージコミットを作る必要がないので自分のブランチが指し示すコミットをそのコミットに移動させること。
+
+・マージコマンドの場合は
+
+
+
+featureブランチ：コミット3
+masterブランチ：コミット2
+⇒
+この状況でmasterブランチの方にfeatureブランチの変更を取り込もうとすると
+git checkout master
+git merge feature
+でfeatureブランチの変更をマージ
+コミット4というマージコミットが作成される。(コミット2とコミット3を親コミットとしている)
+※rebaseの場合と共通しているのはどちらもfeatureブランチの内容を取りこんでいるという
+こと。マージコマンドの方は履歴が枝分かれしている。
+違いは履歴が一直線か枝分かれしているか。
+履歴をきれいに整えたい場合はrebaseを使うこと。
+
+・実践
+
+
+
+$ git status
+$ git branch feature
+それぞれ枝分かれさせて、rebaseコマンドを使う。
+⇒
+Atomでmaster2.htmlを作成
+⇒
+$ git commit
+結果：
+hint: Waiting for your editor to close the file...
+[master ~] master2を新規作成
+ 1 file changed, 1 insertion(+)
+ create mode 100644 master2.html
+⇒
+$ git checkout feature
+⇒
+Atomでfeature2.htmlを作成
+⇒
+$ git add .
+$ git commit
+結果：
+hint: Waiting for your editor to close the file...
+[feature ~] feature2を新規作成
+ 1 file changed, 1 insertion(+)
+ create mode ~ feature2.html
+⇒
+ここまでで今コミットが枝分かれしている状態になった。
+⇒
+rebaseコマンドを使ってfeatureブランチの方に
+masterブランチの内容を取り込んでいく
+featureブランチにいる状態で
+$ git rebase master
+結果：
+First, rewinding head to replay your work on top of it...
+Applying: feature2を新規作成
+⇒
+リベース出来ているか確認
+$ git log
+結果：
+commit ~ (HEAD -> feature)
+Author: 作者名<アドレス>
+Date:   Wed Dec 19 00:23:51 2018 +0900
+
+    feature2を新規作成
+
+commit ~ (master)
+Author: 作者名<アドレス>
+Date:   Wed Dec 19 00:20:36 2018 +0900
+
+    master2を新規作成
+
+commit ~ (origin/master)
+Merge: ~ ~
+Author: 作者名<アドレス>
+Date:   Tue Dec 18 23:14:33 2018 +0900
+
+    Merge pull request #2 from ユーザー名/github_flow
+
+    GitHub Flowを追記
+※featureブランチが指し示す親コミットというのがmasterブランチが指し示している
+コミットの方に切り替わった。masterブランチの変更を取り込みながら履歴を一直線
+⇒
+masterブランチにfeatureブランチの内容を取り込む
+$ git checkout master
+$ git merge feature
+結果：
+Updating ~..adf2e87
+Fast-forward
+ feature2.html | 1 +
+ 1 file changed, 1 insertion(+)
+ create mode ~ feature2.html
+⇒
+$ git push origin master
+⇒
+featureブランチの内容はmasterブランチに取り込んでいるのでfeatureブランチ
+は削除する
+$ git branch -d feature
+
+・リベースでしてはいけないこと
+
+
+
+GitHubにプッシュしたコミットをリベースするのはNG
+例
+ローカルでコミット1があってmasterブランチが指している状態とする。
+その状態からfeatureブランチを作成してコミットしてコミット2を作成
+それをgit pushでアップ。
+ローカルでコミット3を作成。
+コミット2にコミット3の変更内容を取り込みたいな。
+featureブランチにいる状態でリベース
+コミット2の親コミットがコミット1から3に変更される。
+コミット2はGITHubにPUSHしたもの。それを今回リベースしたわけ。
+リベースしたコミットというのをgit pushしようとするとpushできなくなる。(コミット1の次のコミットが2と3になっていて違うよと怒られるため)
+GITHUBの方を見てみるとコミット1の次のコミット2になっている。
+それに対して、ローカルのコミット履歴はコミット3になっている。
+同じfeatureブランチの情報にも関わらず、GITHUBにあるものとローカルで矛盾が起きている
+そのため、GITHUBの方でどちらを優先していいか分からなくなる。そういう状態になってしまった
+場合、GITHUBはGITHUBにアップされている情報を優先してローカルで新しくgit pushされた
+情報は受け取らないという行動に出る。
+※もし、GITHUBにプッシュしたコミットの内容を修正したい場合は、コミットの履歴を直すのではなく
+もう一度作業して、新しいコミットをしてその内容を修正するようにすること
+※git push -fは絶対NG
+fはforceで強制させるという意味。
+今あるGITHUBの内容を上書きして、強制的にgit pushすることができる。これを
+するとGITの履歴が完全に壊れてしまう。
+
+・リベースとマージのどちらを使う
+
+
+
+作業の履歴を残したいならマージを使う。
+履歴をきれいにしたいならリベースを使う。
+プッシュしていないローカルの変更にはリベースを使い、プッシュした後は
+マージを使う。コンフリクトしそうならマージを使う
+■マージ
+・コンフリクトの解決が比較的簡単
+・マージコミットがたくさんあると履歴が複雑化する
+■リベース
+・履歴をきれいに保つことができる
+・コンフリクトの解決が若干面倒(コミットそれぞれに解消が必要)
+
+・プルの設定をリベースに変更する
+
+
+
+プルにはマージ型とリベース型がある。
+■マージ型
+git pull origin master
+※マージコミットが残るから、マージしたという記録を残したい場合に使う。
+■リベース型
+git pull --rebase orgin master
+※マージコミットが残らないから、GitHubの内容を取得したいだけの時は--rebase
+を使う
+⇒
+例えば、自分がmasterブランチにいてGitHub上のmasterブランチの最新の情報を取得したいとする。
+git pullで取得すると、最新の情報を取ってきたいのにも関わらず、マージコミットが残ってしまう。
+ただ何かを変更したわけではないのでマージコミットは必要ではない。
+そういうときに「git pull --rebase orgin master」することでマージコミットを残さずに、GitHubの
+内容をワークツリーの方に取得することができる。
+単純に最新の情報を取ってきたいのであればリベース型がおすすめ
+
+・--rebaseで実行してもいいが
+デフォルトでプルの挙動をリベース型に変更すると便利
+
+
+
+git config --global pull.rebase true
+# masterブランチでgit pullするときだけはリベース型にして他の時はマージ型の挙動をしてほしい場合
+git config branch.master.rebase true
+
+・リベースで履歴を書き換えるやり方
+コミットメッセージを書き換えたり、コミットの内容を書き換えて整えてからPUSH
+したいときのやり方
+
+
+
+直前のコミットをやり直す
+git commit --amend
+※リモートリポジトリにPushしたコミットはやり直してはダメ
+
+複数のコミットをやり直する
+git rebase -i <コミットID>
+例
+git rebase -i HEAD~3
+※直前3つのコミットのやり直しができる。
+エディタが立ち上がって直前3つ分のコミット
+pick gh21f6d ヘッダー修正
+pick 193054e ファイル追加
+pick 84gha0d README修正
+が表示される
+※-iは--interactiveの略。対話的リベースといって、やり取りしながら
+履歴を変更をしていく。
+⇒
+# やり直したいcommitをeditにする
+edit gh21f6d ヘッダー修正
+pick 193054e ファイル追加
+pick 84gha0d README修正
+⇒
+ステージに上げてgit commit
+# やり直したら実行する
+git commit --amend
+※コミットの履歴をやりなおすことができる
+⇒
+# 次のコミットへ進む(リベース完了)
+git rebase --continue
+
+・コミットの指定方法
+
+
+
+■HEAD~
+1番目の親を指定する。
+HEADを基点にして数値分の親コミットまで指定する。
+HEAD~2だとさらにその上の親コミット
+HEAD~3だとHEADから3つさかのぼった親コミットを指定している
+■HEAD^2 
+^(キャレット)
+マージした場合の2番目の親コミットを指定する。
+
+・rebase -iコマンドの一連の流れ
+
+
+
+HEAD~3を入力するとそれを基点としてそれ以降のコミットをrabaseしていくという意味
+HEAD~2、HEAD~1、HEADの内容を修正していくということ
+⇒
+edit gh21f6d ヘッダー修正 ※HEAD~2
+pick 193054e ファイル追加 ※HEAD~1
+pick 84gha0d README修正   ※HEAD
+⇒
+①rebase -iコマンドで対話的リベースモードに入る
+コミットエディタが立ち上がる
+②修正したいコミットをeditにしてコミットエディタを終了する。
+③コミットエディタを終了するとリーベース対象のコミットに1つ1つrebaseを行う。
+pickのところは今までの内容で適用する。editのコミットのところでコミットの適用が止まる
+そこでファイルの修正をして、ステージに追加。
+④git commit --amendコマンドで今のコミットの内容を修正
+※今回でいうとHEAD~2のところ
+⑤git rebase --continueで次のコミットへいく
+⑥pickだとそのままのコミット内容を適用して次へいく。
+※HEAD~1の内容を適用して自動的に次へ行ってHEADの内容を適用。
+
+・実践
+3つのコミットを作成して、3つのコミットに対してrebaseコマンド
+で内容を修正していく
+
+
+
+
+$ cd C:/~/udemy_code/git_tutorial
+⇒
+touchコマンドで新規ファイルを作成
+$ touch first.html
+※空ファイルを作成するコマンド
+⇒
+$ ls
+結果：
+feature.html   first.html  index.html   master2.html
+feature2.html  home.html   master.html  secret.txt
+⇒
+$ git add first.html
+$ git commit -m "first.htmlを追加"
+※エディタを立ち上げずにコミット
+⇒
+$ touch second.html
+$ git add second.html
+$ git commit -m "second.htmlを追加"
+⇒
+$ touch third.html
+$ git add third.html
+$ git commit -m "third.html"
+⇒
+ちゃんとコミットできたか確認
+git log --oneline
+結果：
+$ git log --oneline
+~ (HEAD -> master) third.html
+~ second.htmlを追加
+~ first.htmlを追加
+～
+⇒
+3つのコミットの内容を修正していく
+git rebase -i HEAD~3
+『結果：
+Stopped at ~...  third.html
+You can amend the commit now, with
+
+  git commit --amend
+
+Once you are satisfied with your changes, run
+
+  git rebase --continue
+コミットエディタが立ち上がる
+pick ~ first.htmlを追加
+pick ~ second.htmlを追加
+pick ~ third.html』
+と書かれている。
+今回third.htmlを追加という風にコミットメッセージの変更を加えたい
+edit ~ third.htmlに修正していったん閉じる。
+⇒
+Stopped at ~...  third.html
+You can amend the commit now, with
+
+  git commit --amend
+
+Once you are satisfied with your changes, run
+
+  git rebase --continue
+と出る
+※コミットの内容をやり直したい場合は、git commit --amendを使え。
+amendをしたあと、これ以上修正しなくていいよといった場合は、 git rebase --continueを使え
+もしファイルの内容を修正したい場合は、ファイルの内容を修正してステージに追加した後に、git commit --amend
+⇒
+$ git commit --amend
+結果：
+エディタが立ち上がって
+third.html
+と書かれている
+※先ほどeditとしたところ
+third.htmlを追加に修正し、閉じる
+hint: Waiting for your editor to close the file...
+[detached HEAD ~] third.htmlを追加
+ Date: Wed Dec 19 23:47:20 2018 +0900
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ create mode ~ third.html
+⇒
+EBASE-i 3/3)
+$ git rebase --continue
+結果：
+Successfully rebased and updated refs/heads/master.
+bash: .git/rebase-merge/head-name: Permission denied
+bash: .git/rebase-merge/msgnum: Permission denied
+bash: .git/rebase-merge/end: Permission denied
+⇒
+ちゃんと内容が修正されたかgit logコマンドで確認
+$ git log --oneline
+結果：
+~ (HEAD -> master) third.htmlを追加
+~ second.htmlを追加
+~ first.htmlを追加

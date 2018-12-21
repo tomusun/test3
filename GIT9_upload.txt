@@ -1,0 +1,230 @@
+▲もう怖くないGIT⑨(コミットを並替、削除、Permission denied解決、コミットをまとめる、コミットを分割、GITHUBと同じ状態に戻す)
+・コミットを並び替える、削除する
+git rebase -i HEAD~3
+⇒
+pick gh21f6d ヘッダー修正
+pick 193054e ファイル追加
+pick 84gha0d README修正 ※一番最近のコミット
+※履歴は古い順に表示されるので注意。git logとは逆。
+この履歴を削除したり並び替える。
+
+
+
+# ①84gha0dのコミットを消す
+# ②193054eを先に適用する
+pick 193054e ファイル追加
+pick gh21f6d ヘッダー修正
+※このようにコミットを削除したり並び替えたりできる。
+
+・bash: .git/rebase-merge/head-name: Permission denied
+bash: .git/rebase-merge/msgnum: Permission denied
+bash: .git/rebase-merge/end: Permission denied
+
+
+
+というのは再起動またはATOMを閉じれば直った
+
+・実践
+
+
+$ git log --oneline -n 3
+結果
+~ (HEAD -> master) third.htmlを追加
+~ second.htmlを追加
+~ first.htmlを追加
+⇒
+$ git rebase -i HEAD~3
+結果：
+エディタが立ち上がって
+pick ~ first.htmlを追加
+pick ~ second.htmlを追加
+pick ~ third.htmlを追加
+※git logとは逆の順番で表示されているところに注目
+pick ~ second.htmlを追加
+pick ~ first.htmlを追加
+pick ~ third.htmlを追加
+に修正魏t
+Successfully rebased and updated refs/heads/master.
+bash: .git/rebase-merge/head-name: Permission denied
+bash: .git/rebase-merge/msgnum: Permission denied
+bash: .git/rebase-merge/end: Permission denied
+⇒
+$ git log --oneline -n 3
+~ (HEAD -> master) third.htmlを追加
+~ first.htmlを追加
+~ second.htmlを追加　※一番古い履歴になっている。
+コミットの順番が変わっていることを確認
+
+・コミットをまとめる
+
+
+
+$ git log --oneline -n 3
+
+pick gh21f6d ヘッダー修正
+pick 193054e ファイル追加
+pick 84gha0d README修正
+
+# コミットを1つにまとめる。※1番古いやつやpickにしておく。残りをsquash
+pick gh21f6d ヘッダー修正　
+squash 193054e ファイル追加
+squash 84gha0d README修正
+※squash(スカッシュ)は押し潰すという意味。squashを指定するとそのコミットを直前のコミットと1つにする。
+
+・実践
+
+
+$ git rebase -i HEAD~3
+結果：
+pick ~ second.htmlを追加
+pick ~ first.htmlを追加
+pick ~ third.htmlを追加
+から
+pick ~ second.htmlを追加
+squash ~ first.htmlを追加
+squash ~ third.htmlを追加
+にする
+⇒
+またエディタが立ち上がるのでそのまま保存されているコミットメッセージはそのままで閉じる
+hint: Waiting for your editor to close the file...
+[detached HEAD ~] second.htmlを追加
+ Date: Wed Dec 19 23:45:25 2018 +0900
+ 3 files changed, 0 insertions(+), 0 deletions(-)
+ create mode ~ first.html
+ create mode ~ second.html
+ create mode ~ third.html
+Successfully rebased and updated refs/heads/master.
+⇒
+$ git log --oneline -n 3
+結果：
+~ (HEAD -> master) second.htmlを追加
+~ (origin/master) feature2を新規作成
+~ master2を新規作成
+※1つのコミットになっている
+⇒
+ファイルはちゃんとあるのか確認
+$ ls
+結果：
+feature.html   first.html  index.html   master2.html  secret.txt
+feature2.html  home.html   master.html  second.html   third.html
+
+・コミットを分割する
+
+
+
+git rebase -i HEAD~3
+⇒
+pick gh21f6d ヘッダー修正
+pick 193054e ファイル追加
+pick 84gha0d README修正とindex修正
+
+# コミットを分割する
+pick gh21f6d ヘッダー修正
+pick 193054e ファイル追加
+edit 84gha0d README修正とindex修正
+保存したら
+git reset HEAD^
+※resetコマンドはコミットを取り消してステージしていない状態に戻す。
+HEAD^はeditのコミットのところを指す。editのコミットを取り消してステージしていない状態に戻す。
+git add README
+git commit -m 'README修正'
+git add index.html
+git commit -m 'index.html修正'
+git rebase --continue
+
+・実践
+
+
+
+$ git log --oneline -n 3
+結果
+~ (HEAD -> master) second.htmlを追加
+~ (origin/master) feature2を新規作成
+~ master2を新規作成
+⇒
+$ git rebase -i HEAD~3
+結果：
+ATOM立ち上がって
+pick ~ master2を新規作成
+pick ~ feature2を新規作成
+pick ~ second.htmlを追加
+から
+pick ~ master2を新規作成
+pick ~ feature2を新規作成
+edit ~ second.htmlを追加
+に修正
+⇒
+git reset HEAD^
+⇒
+$ git status
+結果：
+interactive rebase in progress; onto ~
+Last commands done (3 commands done):
+   pick ~ feature2を新規作成
+   edit ~ second.htmlを追加
+  (see more in file .git/rebase-merge/done)
+No commands remaining.
+You are currently editing a commit while rebasing branch 'master' on '~'.
+  (use "git commit --amend" to amend the current commit)
+  (use "git rebase --continue" once you are satisfied with your changes)
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+        first.html
+        second.html
+        third.html
+※first.html、second.html、third.htmlがステージングされていない状態。
+これを今回、first.html、second.html追加というコミットと、third.html追加のコミットと
+いったように2つに分割
+⇒
+$ git add first.html
+$ git add second.html
+$ git commit -m "first.htmlとsecond.htmlを追加"
+結果：
+[detached HEAD ~] first.htmlとsecond.htmlを追加
+ 2 files changed, 0 insertions(+), 0 deletions(-)
+ create mode ~ first.html
+ create mode ~ second.html
+⇒
+$ git add third.html
+$ git commit -m "third.htmlを追加"
+結果：
+[detached HEAD ~] third.htmlを追加
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ create mode ~ third.html
+⇒
+$ git rebase --continue
+結果：
+Successfully rebased and updated refs/heads/master.
+⇒
+$ git log --oneline -n 3
+結果：
+~ (HEAD -> master) third.htmlを追加
+~ first.htmlとsecond.htmlを追加
+~ (origin/master) feature2を新規作成
+
+・GITHUBと同じ状態に戻す
+
+
+
+$ git rebase -i HEAD~3
+⇒
+pick ~ feature2を新規作成
+だけにする
+⇒
+$ git log --oneline
+結果：
+~ (HEAD -> master, origin/master) feature2を新規作成
+~ master2を新規作成
+※コミットが消えていることを確認
+⇒
+ファイルの内容が消えているかどうかも確認
+$ ls
+結果：
+feature.html   home.html   master.html   secret.txt
+feature2.html  index.html  master2.html
+※first.html、second.html、third.htmlもないことを確認
+⇒
+GITHUBと同じ状態にする
+$ git pull origin master
