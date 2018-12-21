@@ -1,326 +1,324 @@
-�ZGit�̃C���X�g�[��
+〇Gitのインストール
 
 
 
-�l�b�g��Git for wondows�Ō������A�C���X�g�[���B(�ݒ�̓f�t�H���g�̂܂܂ł悢)
-�C���X�g�[�����ꂽ���ǂ�����Git Bash�Ƃ����^�[�~�i���𗧂��グ�Ă݂�B
-�ugit version�v�ƃR�}���h��ł��ĕ\�������Ζ��͂Ȃ��B
+ネットでGit for wondowsで検索し、インストール。(設定はデフォルトのままでよい)
+インストールされたかどうかはGit Bashというターミナルを立ち上げてみる。
+「git version」とコマンドを打って表示されれば問題はない。
 
-�ZGit�̑����
+〇Gitの操作は
 
 
 
-GUI�ő��삷����@��Git Bash���瑀�삷����@������B
-Git Bash���瑀�삵������Git�̋@�\�𐶂�����B
+GUIで操作する方法とGit Bashから操作する方法がある。
+Git Bashから操作した方がGitの機能を生かせる。
 
-�ZGit�Ŏg�p����G�f�B�^
+〇Gitで使用するエディタ
 
 
 
 Atom
-Atom��GitHub�̑n�Ǝ҂����R�ɃJ�X�^�}�C�Y�ł���V����̃G�f�B�^���J������Ƃ����v��
-����n�܂������́B
+AtomはGitHubの創業者が自由にカスタマイズできる新世代のエディタを開発するという思い
+から始まったもの。
 
-�Z�C���X�g�[������Git�̏����ݒ�
+〇インストールしたGitの初期設定
 
 
 
-���܂����[�U�[����o�^����
-git config --global user.name "github User name"(���[�U�[����o�^) ��tomusun�Ƃ��ēo�^
-�����[���A�h���X��o�^
-git config --global user.email tomusu76@gmail.com(GIThub�œo�^�����A�h���X)
-���G�f�B�^�̓o�^ ��Atom��o�^
+■まずユーザー情報を登録する
+git config --global user.name "github User name"(ユーザー名を登録) 
+■メールアドレスを登録
+git config --global user.email GIThubで登録したアドレス
+■エディタの登録 ※Atomを登録
 git config --global core.editor "atom --wait"
-��
-�ݒ肪�����Ƃł��������m�F
-���[�U�[�̊m�F
+⇒
+設定がちゃんとできたかを確認
+ユーザーの確認
 $ git config user.name
-���ʁFtomusun�Ƃł�
-��
-�A�h���X�̊m�F
+⇒
+アドレスの確認
 $ git config user.email
-���ʁFtomusu76@gmail.com
-��
-�G�f�B�^�̊m�F
+⇒
+エディタの確認
 $ git config core.editor
-���ʁF
+結果：
 atom --wait
 
-�������܂ł�GIT�̏����ݒ�B
-�����؂�Ɋm�F�������ꍇ�́Agit config --list
-��Git�̓o�^��񂷂ׂĂ��\�������B
+※ここまでがGITの初期設定。
+いっぺんに確認したい場合は、git config --list
+⇒Gitの登録情報すべてが表示される。
 
-�Z����ݒ肵�����͂ǂ��ɕۑ�����Ă��邩�Ƃ�����
+〇今回設定した情報はどこに保存されているかというと
 
 
 
-home�f�B���N�g���z����gitconfig�t�@�C��
-�R�}���h
+homeディレクトリ配下のgitconfigファイル
+コマンド
 $ cat ~/.gitconfig
-���ʁF
+結果：
 
-�Z�^�[�~�i���̕p�o�R�}���h�ɂ��Ă܂Ƃ߂܂��B
-Git�̓^�[�~�i���ō�Ƃ���̂ŁA���̎��ɐ�΂Ɋo���Ă����Ăق����R�}���h�����܂Ƃ߂܂��B
-cd�R�}���h
-
-
-
-�f�B���N�g�����ړ����܂��B
-
-�Zls�R�}���h
+〇ターミナルの頻出コマンドについてまとめます。
+Gitはターミナルで作業するので、その時に絶対に覚えておいてほしいコマンドだけまとめます。
+cdコマンド
 
 
 
-�f�B���N�g���̓��e��\�����܂��B ls -a �R�}���h�ŁA�B���t�@�C�����܂߂��f�B���N�g���S���e��\�����܂��B
+ディレクトリを移動します。
 
-�Zmkdir�R�}���h
-
-
-
-�f�B���N�g����V�K�쐬���܂��B
-
-�Zrm�R�}���h
+〇lsコマンド
 
 
 
-�t�@�C�����폜���܂��B
+ディレクトリの内容を表示します。 ls -a コマンドで、隠しファイルを含めたディレクトリ全内容を表示します。
 
-�Zpwd�R�}���h
-
-
-
-���݂̃p�X��\��
-
-�Zcp�R�}���h
+〇mkdirコマンド
 
 
 
-�t�@�C�����R�s�[���܂��B
+ディレクトリを新規作成します。
 
-�Zmv�R�}���h
-
-
-
-�t�@�C���̈ړ��ƃt�@�C�����̕ύX���s���܂��B
-
-�Zcat�R�}���h
+〇rmコマンド
 
 
 
-�t�@�C���̒��g��\�����܂��B
+ファイルを削除します。
 
-�Z�ǂ���������Git���f�[�^��ۑ����Ă��邩�Ƃ�����
-
-
-
-Git��
-�����ł͂Ȃ��X�i�b�v�V���b�g�Ƃ��Ċۂ��ƕۑ�
-���܂�܂�ۑ����Ă���
-�o�[�W����1
-�t�@�C���`
-�t�@�C���a
-�t�@�C���b
-��
-�o�[�W����2
-�t�@�C���` �@�����̂܂�
-�t�@�C���a1�@���ύX
-�t�@�C���b1�@���ύX
-�����ł͂Ȃ��X�i�b�v�V���b�g�Ƃ��Ċۂ��ƕۑ�
-��
-�o�[�W����3
-�t�@�C���`1�@���ύX
-�t�@�C���a1�@�����̂܂�
-�t�@�C���b2�@���ύX
-��
-�X�i�b�v�V���b�g�ŕۑ����邱�Ƃŕ����l�ŊJ������Ƃ��̃X�s�[�h���グ�邱�Ƃ�
-�ł���B
-�����l�ɐl�����s���ĊJ���ł���悤�u�����`��؂��ĊJ���̃o�[�W�������}�����ꂵ�ĊJ��
-�������Ƃ��������v�Z���Ă��Ă͂Ȃ�Ȃ��ăX�i�b�v�V���b�g�Ƃ��ĕۑ�����΍������v�Z
-���Ȃ��Ă������A�ƂĂ������u�����`��؂�����A�}�[�W�����邱�Ƃ��ł���B
-�����Ȃ݂ɂf�h�s�ȑO�̃o�[�W�����Ǘ��̑����͍����Ƃ��ăf�[�^��ۑ����Ă��ău�����`��؂�̂ɑ�ώ��Ԃ��������Ă����B��K�͂ȃv���W�F�N�g���Ɛ��\�b���������肷��B
-�f�h�s���Ƃ�������u�łł���B�������������������Linux�̍�҂�GIT�����삵���B
-
-�Z�o�[�W�������L�^���ĉ����ł���悤�ɂȂ�̂�
+〇pwdコマンド
 
 
 
-�o�[�W�������L�^���邱�ƂňȑO�̏�Ԃɖ߂����Ƃ��ł���B
-�R�~�b�g�Ńo�[�W�������L�^���Ă���B
+現在のパスを表示
 
-�Z���[�J���̍�Ƃ̗���
-
-
-
-���[�J����3�̃G���A�ɕ�����Ă���
-���[�N�c���[�˃X�e�[�W�˃��|�W�g��
-��
-�����[�N�c���[
-�t�@�C����ύX�����肷��茳�̍�Əꏊ
-���X�e�[�W
-�R�~�b�g����ύX����������ꏊ(�t�@�C���ύX��git add�Œǉ�)
-���R�~�b�g�̓X�i�b�v�V���b�g���L�^���邱��
-�����|�W�g��
-�X�i�b�v�V���b�g���L�^(�R�~�b�g git commit)
-
-�Z�Ȃ��X�e�[�W������̂�
+〇cpコマンド
 
 
 
-���茳�Ńt�@�C������������ύX�����Ƃ��ɕύX�����������t�@�C��������ΕύX���ĂȂ��t�@�C��
-������B�ύX��������������R�~�b�g��������������B
-���������Ƃ��̂��߂ɕύX������������������L�^�ł���悤�ύX����t�@�C�����X�e�[�W�ɋL�^���ăX�e�[�W�ɒǉ����ꂽ�ύX���������|�W�g���ɋL�^����Ƃ����d�g�݁B
+ファイルをコピーします。
 
-�ZGit�̃f�[�^�\��
-�����ŉ����N�����Ă��邩
+〇mvコマンド
 
 
 
-���[�N�c���[ index.html
+ファイルの移動とファイル名の変更を行います。
+
+〇catコマンド
+
+
+
+ファイルの中身を表示します。
+
+〇どういう風にGitがデータを保存しているかというと
+
+
+
+Gitは
+差分ではなくスナップショットとして丸ごと保存
+■まるまる保存している
+バージョン1
+ファイルＡ
+ファイルＢ
+ファイルＣ
+⇒
+バージョン2
+ファイルＡ 　※そのまま
+ファイルＢ1　※変更
+ファイルＣ1　※変更
+差分ではなくスナップショットとして丸ごと保存
+⇒
+バージョン3
+ファイルＡ1　※変更
+ファイルＢ1　※そのまま
+ファイルＣ2　※変更
+⇒
+スナップショットで保存することで複数人で開発するときのスピードを上げることが
+できる。
+複数人に人が並行して開発できるようブランチを切って開発のバージョンを枝分かれして開発
+差分だといちいち計算してくてはならなくてスナップショットとして保存すれば差分を計算
+しなくていい分、とても早くブランチを切ったり、マージをすることができる。
+※ちなみにＧＩＴ以前のバージョン管理の多くは差分としてデータを保存していてブランチを切るのに大変時間がかかっていた。大規模なプロジェクトだと数十秒かかったりする。
+ＧＩＴだとそこが一瞬でできる。こういった事情があってLinuxの作者はGITを自作した。
+
+〇バージョンを記録して何ができるようになるのか
+
+
+
+バージョンを記録することで以前の状態に戻すことができる。
+コミットでバージョンを記録している。
+
+〇ローカルの作業の流れ
+
+
+
+ローカルは3つのエリアに分かれている
+ワークツリー⇒ステージ⇒レポジトリ
+⇒
+■ワークツリー
+ファイルを変更したりする手元の作業場所
+■ステージ
+コミットする変更を準備する場所(ファイル変更をgit addで追加)
+※コミットはスナップショットを記録すること
+■リポジトリ
+スナップショットを記録(コミット git commit)
+
+〇なぜステージがあるのか
+
+
+
+■手元でファイルをたくさん変更したときに変更が完了したファイルもあれば変更してないファイル
+もある。変更完了したやつだけコミットしたい時がある。
+そういうときのために変更が完了したやつだけを記録できるよう変更するファイルをステージに記録してステージに追加された変更分だけリポジトリに記録するという仕組み。
+
+〇Gitのデータ構造
+裏側で何が起こっているか
+
+
+
+ワークツリー index.html
 git add
-index.html�̃t�@�C���̒��g�����k�������k�t�@�C�������k�t�@�C��A�����|�W�g���ɕۑ�����B
-���k�t�@�C��A���ł�����C���f�b�N�X�Ƃ����t�@�C����index.html�̃t�@�C���̒��g��
-���k�t�@�C��A���Ƃ����t�@�C�����ƃt�@�C���̒��g���}�b�s���O��������ۑ����Ă����B
-���ꂪ�X�e�[�W�ɒǉ�����Ƃ��ɗ����ŋN�����Ă��邱�ƁB
-��
-�R�~�b�g����ƃC���f�b�N�X�̃t�@�C���\������Ƀc���[1�Ƃ����t�@�C���������B
-�c���[1�̓C���f�b�N�X�ɒǉ�����t�@�C��A�̃t�@�C���\�������߂ĕۑ��������́B
-�c���[1�Ƃ����t�@�C�����������R�~�b�g1�Ƃ����t�@�C��������Ă����B
-�R�~�b�g1�͂�������񂪋L�ڂ��ꂢ�Ă���
- �c���[1
- �쐬��(�R�~�b�g�����l�̖��O�Ƃ��̐l�̃��[���A�h���X(�����ݒ�ł������B))
- ���t(�R�~�b�g�������t�j
- �R�~�b�g���b�Z�[�W(���̂��߂ɃR�~�b�g����̂�)
-�˃c���[1����t�@�C���\��(�t�@�C�����ƃt�@�C�����e)��������̂ŃR�~�b�g�����Ƃ��̃X�i�b�v�V���b�g��������悤�ɂȂ�B���ꂪ�����̂��߂ɂ�������B
-�c���[1�ƃR�~�b�g1�����̂��ugit commit�v
-�����|�W�g���ɂ͈��k�t�@�C��A�A�c���[1�A�R�~�b�g1�Ƃ���3�̃t�@�C�����ۑ�����Ă���B
-3��ނ̃t�@�C�����쐬���ăf�[�^��ۑ����Ă���B
+index.htmlのファイルの中身を圧縮した圧縮ファイルを圧縮ファイルAをリポジトリに保存する。
+圧縮ファイルAができたらインデックスというファイルにindex.htmlのファイルの中身は
+圧縮ファイルAだというファイル名とファイルの中身をマッピングした情報を保存していく。
+これがステージに追加するときに裏側で起こっていること。
+⇒
+コミットするとインデックスのファイル構成を基にツリー1というファイルが作られる。
+ツリー1はインデックスに追加するファイルAのファイル構成を改めて保存したもの。
+ツリー1というファイルを作ったらコミット1というファイルを作っていく。
+コミット1はいくつか情報が記載されいている
+ ツリー1
+ 作成者(コミットした人の名前とその人のメールアドレス(初期設定でやったやつ。))
+ 日付(コミットした日付）
+ コミットメッセージ(何のためにコミットするのか)
+⇒ツリー1からファイル構成(ファイル名とファイル内容)が分かるのでコミットしたときのスナップショットが分かるようになる。だれがいつ何のためにが分かる。
+ツリー1とコミット1を作るのが「git commit」
+※リポジトリには圧縮ファイルA、ツリー1、コミット1という3つのファイルが保存されている。
+3種類のファイルを作成してデータを保存している。
 
-�Z�ύX�����R�~�b�g�����Ƃ��͗����łǂ̂悤�Ȃ��Ƃ��s���Ă���̂�
-���[�N�c���[��css/home.css��V�K�쐬�����Ƃ���B
-
-
-
-�X�e�[�W�ɒǉ�����Ƃ��͈��k�t�@�C�����쐬����Bhome.css�����k�������k�t�@�C��B
-���ɃC���f�b�N�X�Ɉ��k�t�@�C��B��css/home.css����Ƃ����t�@�C���\����ǋL����B
-����ŃX�e�[�W�ɒǉ��ł����̂ŃR�~�b�g���Ă����B
-�R�~�b�g����ۂ̓c���[2�Ƃ����c���[�t�@�C����V�K�쐬����B�c���[2�ɂ͍��̃C���f�b�N�X�̏�ԁA�t�@�C���\�����L�^�����B�c���[2���ۑ��ł�����R�~�b�g2�Ƃ����t�@�C�����쐬
-�R�~�b�g2
- �c���[2
- �e�R�~�b�g1(�R�~�b�g1��e�R�~�b�g�Ƃ��ċL�^�B���O�̃R�~�b�g�������̐e�R�~�b�g���ĕۑ�����B����͕ύX���������ǂ��悤�ɂ��Ă���)
- �쐬��
- ���t
- �R�~�b�g���b�Z�[�W
-
-�Z���Ȃ݂ɃC���f�b�N�X�ƃc���[2���Ȃ��ʃt�@�C���Ȃ̂�
+〇変更分をコミットしたときは裏側でどのようなことが行われているのか
+ワークツリーでcss/home.cssを新規作成したとする。
 
 
 
-�c���[2
-index.html   ���k�t�@�C��A
-css/home.css ���k�t�@�C��B
-�C���f�b�N�X
-index.html   ���k�t�@�C��A
-css/home.css ���k�t�@�C��B
-��
-�قڈꏏ�ȓ��e�Ȃ̂Ńt�@�C���Ȃ̂ňꏏ�ł������̂ł͂Ȃ����B
-����͂�������̃t�@�C����ύX���Ă����Ƃ��Ɉꕔ�̃t�@�C�����ɃR�~�b�g�������Ƃ��������������肷��B
-���������Ƃ��̂��߂ɂ܂��R�~�b�g�������t�@�C�����X�e�[�W�ɒǉ�����悤�ɂȂ��Ă���B
-�X�e�[�W�ɒǉ����邽�тɃc���[�t�@�C�����쐬�����炢���̂ł͂Ȃ����Ǝv����������Ȃ�������ł͔��ɔ�����B
-�X�e�[�W�ɒǉ����ĂȂ�ǂ��R�~�b�g�����X�e�[�W�ɒǉ����ꂽ�Ƃ���B
-�����A���̂��߂Ƀc���[�t�@�C���ɍ쐬�����肷��Ǝg��Ȃ����ʃt�@�C�����ʎY
-����Ă��܂��B�Ȃ̂ŃX�e�[�W�ɒǉ������Ƃ��̓C���f�b�N�X�Ƃ���1�̃t�@�C����
-�㏑�����Ă����ăR�~�b�g����Ƃ��ɂ����c���[�Ƃ����t�@�C���ɕۑ�����悤�ɂȂ��Ă���
+ステージに追加するときは圧縮ファイルを作成する。home.cssを圧縮した圧縮ファイルB
+次にインデックスに圧縮ファイルBはcss/home.cssだよというファイル構成を追記する。
+これでステージに追加できたのでコミットしていく。
+コミットする際はツリー2というツリーファイルを新規作成する。ツリー2には今のインデックスの状態、ファイル構成が記録される。ツリー2が保存できたらコミット2というファイルを作成
+コミット2
+ ツリー2
+ 親コミット1(コミット1を親コミットとして記録。直前のコミットを自分の親コミットして保存する。これは変更履歴をたどれるようにしている)
+ 作成者
+ 日付
+ コミットメッセージ
 
-�Z��L��index.html�ɕύX���������ꍇ
+〇ちなみにインデックスとツリー2がなぜ別ファイルなのか
 
 
 
-��index.html�����k�������k�t�@�C��C�����B���̎����k�t�@�C���������̂�
-index.html��home.css�ɂ��Ă͍���Ȃ��B
-�t�@�C���̒��g���Ⴄ�Ƃ��ɂ��������悤�ɂȂ��Ă���B
-���k�t�@�C�����쐬�����炻�̏����C���f�b�N�X�ɒǋL���Ă����B
-�C���f�b�N�X�̒��g��index.html�̒��g�͈��k�t�@�C��A����Ə�����Ă�
-���Ƃ�������k�t�@�C��C����Ə�����������B�����܂łŃX�e�[�W�ɒǉ�����
-���Ƃ��ł����B
-�R�~�b�g����Ƃ܂��c���[���쐬���Ă����A�C���f�N�X�̓��e�����Ƀc���[3�Ƃ���
-�V�����c���[�t�@�C�����쐬����B
-�c���[�t�@�C�����쐬������R�~�b�g3�Ƃ����R�~�b�g�t�@�C����V�����쐬����
- �c���[3
- �e�R�~�b�g2
- �쐬��
- ���t
- �R�~�b�g���b�Z�[�W
-���R�~�b�g2��3�̃X�i�b�v�V���b�g���r����ΑO�̕ύX����̍�����������B
-�����܂łŃR�~�b�g����
+ツリー2
+index.html   圧縮ファイルA
+css/home.css 圧縮ファイルB
+インデックス
+index.html   圧縮ファイルA
+css/home.css 圧縮ファイルB
+⇒
+ほぼ一緒な内容なのでファイルなので一緒でもいいのではないか。
+これはたくさんのファイルを変更していたときに一部のファイルを先にコミットしたいという時があったりする。
+そういうときのためにまずコミットしたいファイルをステージに追加するようになっている。
+ステージに追加するたびにツリーファイルを作成したらいいのではないかと思うかもしれないがそれでは非常に非効率。
+ステージに追加してなんどもコミットせずステージに追加されたとする。
+もし、そのためにツリーファイルに作成したりすると使わない無駄ファイルが量産
+されてしまう。なのでステージに追加したときはインデックスという1つのファイルに
+上書きしておいてコミットするときにだけツリーというファイルに保存するようになっている
 
-�ZGIT�̃f�[�^�\���̂܂Ƃ�
+〇上記のindex.htmlに変更を加えた場合
 
 
 
-��GIT�̓��|�W�g���Ɉ��k�t�@�C���A�c���[�A�R�~�b�g�t�@�C�����쐬���邱�ƂŃf�[�^��ۑ����Ă���B
-�X�e�[�W�ɒǉ�����Ƃ��Ɉ��k�t�@�C��������A�R�~�b�g����Ƃ��Ƀc���[�ƃR�~�b�g�������B
-���̒��̃R�~�b�g���e�R�~�b�g�������ƂŕύX���������ǂ邱�Ƃ��o����B
-�������������Ƃ��番���邱�Ƃ�GIT�̖{���Ƃ��ăf�[�^�����k���ăX�i�b�v�V���b�g��
-�ۑ����Ă��邱�ƁB
-Git�̃R�}���h�͂��̃f�[�^�ɑ΂��ĐF�X�ȑ�������Ă���B
-��Git�͕ύX������ۑ����鎞�A���k�t�@�C���A�c���[�t�@�C���A�R�~�b�g�t�@�C���Ƃ����`�ŃX�i�b�v�V���b�g���L�^���Ă��܂��B
-Git�̎��̂͊�{�I�ɂ͂��ꂾ���ł��B�ƂĂ��V���v���ł��ˁB
-Git�̃R�}���h�́A����3��Git�I�u�W�F�N�g�ɑ΂��ĉ��炩�̑�������Ă��邾���ł��B
-���ꂩ��F�X�ȃR�}���h���w��ł����܂��B���̎��A�R�}���h���ŉ_�Ɋo����̂ł͂Ȃ��A���̃f�[�^�\���ɑ΂��Ăǂ�������������Ă���R�}���h�Ȃ̂��Ƃ������Ƃ��C���[�W���Ă��炦��΁AGit�����ۂǂ̂悤�Ȃ��Ƃ����Ă��邩���킩��Ǝv���܂�
+■index.htmlを圧縮した圧縮ファイルCを作る。この時圧縮ファイルが作られるのは
+index.htmlでhome.cssについては作られない。
+ファイルの中身が違うときにだけ作られるようになっている。
+圧縮ファイルを作成したらその情報をインデックスに追記していく。
+インデックスの中身はindex.htmlの中身は圧縮ファイルAだよと書かれてい
+たところを圧縮ファイルCだよと書き換えられる。ここまででステージに追加する
+ことができた。
+コミットするとまずツリーを作成していき、インデクスの内容を元にツリー3という
+新しいツリーファイルを作成する。
+ツリーファイルを作成したらコミット3というコミットファイルを新しく作成する
+ ツリー3
+ 親コミット2
+ 作成者
+ 日付
+ コミットメッセージ
+※コミット2と3のスナップショットを比較すれば前の変更からの差分も分かる。
+ここまででコミット完了
 
-�Etree�R�}���h�̃C���X�g�[�����@
-Windows�̏ꍇ
+〇GITのデータ構造のまとめ
 
 
 
-1. �z�[���f�B���N�g�������� .bashrc  �t�@�C�����쐬���܂� (~/.bashrc )
-2. ���̃t�@�C���Ɉȉ����L�ڂ��܂��B
+■GITはリポジトリに圧縮ファイル、ツリー、コミットファイルを作成することでデータを保存している。
+ステージに追加するときに圧縮ファイルが作られ、コミットするときにツリーとコミットが作られる。
+その中のコミットが親コミットを持つことで変更履歴をたどることが出来る。
+こういったことから分かることはGITの本質としてデータを圧縮してスナップショットで
+保存していること。
+Gitのコマンドはそのデータに対して色々な操作をしている。
+※Gitは変更履歴を保存する時、圧縮ファイル、ツリーファイル、コミットファイルという形でスナップショットを記録しています。
+Gitの実体は基本的にはこれだけです。とてもシンプルですね。
+Gitのコマンドは、この3つのGitオブジェクトに対して何らかの操作をしているだけです。
+これから色々なコマンドを学んでいきます。その時、コマンドを闇雲に覚えるのではなく、このデータ構造に対してどういう操作をしているコマンドなのかということをイメージしてもらえれば、Gitが実際どのようなことをしているかがわかると思います
+
+・treeコマンドのインストール方法
+Windowsの場合
+
+
+
+1. ホームディレクトリ直下に .bashrc  ファイルを作成します (~/.bashrc )
+2. そのファイルに以下を記載します。
     alias tree='cmd //c tree //A //F'
-3. Git Bash���ċN�����܂��B
-�� ����N�����ɃG���[�����\������܂����A���Ȃ����ߖ������đ��v�ł��B
-�����tree�R�}���h���g�p�ł���悤�ɂȂ�܂��B
+3. Git Bashを再起動します。
+※ 初回起動時にエラー文が表示されますが、問題ないため無視して大丈夫です。
+これでtreeコマンドを使用できるようになります。
 
-�Z������PC��GIT�̃��|�W�g�����쐬
-
-
-
-�����̃t�H���_�Ɉړ�������git init
-��initialize�̗�
-�R�}���h��ł�.git�f�B���N�g�����쐬�����B(���[�J�����|�W�g���̂���)
-.git�f�B���N�g���̒��ɂ�GIT�ŕK�v�ȂقƂ�ǂ��ׂĂ̂��̂��܂܂�Ă���B
-(���k�t�@�C���A�c���[�t�@�C���A�R�~�b�g�t�@�C���A�X�e�[�W�Ƃ��Ďg�p�����C���f�b�N�X
-�t�@�C���A�ݒ�t�@�C��)
-
-�ZGIT���|�W�g��(���[�J�����|�W�g��)�̍쐬�菇
+〇自分のPCにGITのリポジトリを作成
 
 
 
+自分のフォルダに移動したらgit init
+※initializeの略
+コマンドを打つと.gitディレクトリが作成される。(ローカルリポジトリのこと)
+.gitディレクトリの中にはGITで必要なほとんどすべてのものが含まれている。
+(圧縮ファイル、ツリーファイル、コミットファイル、ステージとして使用したインデックス
+ファイル、設定ファイル)
 
-cd C:/Documents/udemy_code
+〇GITリポジトリ(ローカルリポジトリ)の作成手順
+
+
+
+
+cd C:/~/udemy_code
 mkdir git_tutorial
 cd git_tutorial
 $ git init
-���ʁFInitialized empty Git repository in C:/Documents/udemy_code/git_tutorial/.git/
-�ˋ��GIT���|�W�g�������ꂽ��ƕ\��
+結果：Initialized empty Git repository in C:/~/udemy_code/git_tutorial/.git/
+⇒空のGITリポジトリが作られたよと表示
 
-�Z���ۂɍ���Ă��邩�m�F
+〇実際に作られているか確認
 
 
 
 $ ls -a
-���ʁF./  ../  .git/
-��ls�̓f�B���N�g���̒��g��\������R�}���h
--a��all�̗�
-.git�̃h�b�g�͉B��t�H���_�̂��ƁB
+結果：./  ../  .git/
+※lsはディレクトリの中身を表示するコマンド
+-aはallの略
+.gitのドットは隠れフォルダのこと。
 
-�Z.git�̒��g�����Ă݂�
+〇.gitの中身を見てみる
 
 
 
 $ ls .git/
-���ʁFconfig  description  HEAD  hooks/  info/  objects/  refs/
-��
-objects�Ƃ����f�B���N�g���̓��|�W�g���̖{�́B
-���̒��Ɉ��k�t�@�C����c���[�t�@�C���A�R�~�b�g�t�@�C�����ۑ�����Ă����B
-config�Ƃ����t�@�C����GIT�̐ݒ�t�@�C��
-��git add������Ƃ����̂Ȃ��ɃC���f�b�N�X�t�@�C�����ǉ������
+結果：config  description  HEAD  hooks/  info/  objects/  refs/
+⇒
+objectsというディレクトリはリポジトリの本体。
+この中に圧縮ファイルやツリーファイル、コミットファイルが保存されていく。
+configというファイルはGITの設定ファイル
+※git addをするとここのなかにインデックスファイルも追加される
